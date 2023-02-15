@@ -1,2 +1,0 @@
-# bite
-print("Ok boomer")
