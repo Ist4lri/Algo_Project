@@ -1,1 +1,2 @@
 # bite
+print("Ok boomer")
