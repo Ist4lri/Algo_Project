@@ -68,6 +68,7 @@ def get_all_max_score(filename):
                             for _ in range(index_dict+1)])
     for i in range(len(matrix_distance)+1):
         list_name_clades.append("seq"+str(i+1))
+
     for header in fasta_dict.keys():
         counter_col = 0
         counter_lig += 1
