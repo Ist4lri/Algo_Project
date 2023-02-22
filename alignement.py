@@ -1,6 +1,5 @@
 from constants import *
-from numpy import array
-
+from numpy import array, delete, hstack, vstack
 
 def needleman_wunsch(seq1, seq2, matrix, gap=-1) -> int:
     """
@@ -61,40 +60,85 @@ def open_fasta(filename) -> dict:
 def get_all_max_score(filename):
     counter_col = 0
     counter_lig = 0
+    list_name_clades = []
     fasta_dict = open_fasta(filename)
     index_dict = len(fasta_dict)
-    matrix_distance = array([[0] * (index_dict+1)
-                            for _ in range(index_dict+1)])
-    for i in range(1, index_dict+1):
-        matrix_distance[i][0] = i
-    for j in range(1, index_dict+1):
-        matrix_distance[0][j] = j
+    matrix_distance = array([[0] * (index_dict)
+                            for _ in range(index_dict)])
+    for i in range(len(matrix_distance)) :
+        list_name_clades.append("seq"+str(i+1))
     for header in fasta_dict.keys():
         counter_col = 0
-        counter_lig += 1
         seq_one = fasta_dict[header]
         for key, seq_two in fasta_dict.items():
-            counter_col += 1
             if header != key:
                 matrix_distance[counter_lig, counter_col] = needleman_wunsch(
                     seq_one, seq_two, BLOSUM62)
-    return matrix_distance
+            counter_col += 1
+        counter_lig += 1
+    return matrix_distance, list_name_clades
 
 
-def find_upgma(matrix_distance):
+def find_min_upgma(matrix_distance):
     the_mini = {}
     mini = 100000
     the_mini[mini] = [0, 0]
-    for x in range(1, len(matrix_distance)):
-        for y in range(1, len(matrix_distance)):
+    for x in range(0, len(matrix_distance)):
+        for y in range(0, len(matrix_distance)):
             if x != y:
                 temp_min = matrix_distance[x, y]
                 if temp_min < mini:
                     del the_mini[mini]
                     mini = temp_min
                     the_mini[mini] = [x, y]
-    return the_mini
+                    closer_clades = [x, y]
+    return closer_clades
 
+def paste_mini_upgma(matrix_dist, closer_clades, clades_names) :
+    # on récupère les index des clades à regrouper trouvés plus haut
+    clades_to_regroup = [clades_names[closer_clades[0]], clades_names[closer_clades[1]]]
+    new_clades_names = []
+    # les clades non concerné par la concaténation sont remis dans l'ordre dans la liste des noms de clades
+    for seq_number in clades_names :
+        if seq_number not in clades_to_regroup :
+            new_clades_names.append(seq_number)
+    # les clades regroupés sont ajoutés à la fin de la nouvelle liste (résultat = liste imbriquée des clades à associer)
+    new_clades_names.append([clades_to_regroup])
+    # on va crée une ligne/colonne qui aura les valeurs moyennes des deux lignes à supprmier
+    new_col_of_matrix = []
+    line_to_paste_1 = matrix_dist[closer_clades[0]]
+    line_to_paste_2 = matrix_dist[closer_clades[1]]
+    for i in range(len(line_to_paste_1)) :
+        new_col_of_matrix.append((line_to_paste_1[i] + line_to_paste_2[i]) / 2)
+    print(new_col_of_matrix)
+    # Comme on va ajouter la colonne à la suite du tableau, il faut qu'on rajoute un zéro à la ligne (face à elle même)
+    new_line_of_matrix = new_col_of_matrix
+    new_line_of_matrix.append(0)
+    print(new_line_of_matrix)
+    # création de la nouvelle matrice :
+    new_matrix_dist = matrix_dist
+    print(new_matrix_dist)
+    # on ajoute la colonne à la nouvelle matrice :
+    # _______________________________
+    # A PARTIR DE LÀ IL Y A ERREUR :
+    new_matrix_dist = hstack([new_matrix_dist,new_col_of_matrix])
+    # on ajoute la nouvelle ligne à la nouvelle matrice
+    new_matrix_dist = vstack((new_matrix_dist, new_line_of_matrix))
+    # on supprime les listes et colonnes correspondant au index des clades à regrouper
+    new_matrix_dist = delete(new_matrix_dist, closer_clades[0], 0)
+    new_matrix_dist = delete(new_matrix_dist, closer_clades[1], 0)
+    new_matrix_dist = delete(new_matrix_dist, 0, closer_clades[0])
+    new_matrix_dist = delete(new_matrix_dist, 0, closer_clades[1])
+    print(new_matrix_dist)
+    return new_matrix_dist, new_clades_names
+
+def UPGMA(filename) :
+    matrix_dist, clades_names = get_all_max_score(filename)
+    closer_clades = find_min_upgma(matrix_dist)
+    new_dist_matrix, new_clades_names = paste_mini_upgma(matrix_dist, closer_clades, clades_names)
+    # mettre new_matrix avec nouveaux clades, si new_matrice de taille suffisante -> refaire upgma dessus, sinon arrêter
+    return new_dist_matrix, new_clades_names
 
 if __name__ == "__main__":
-    print(get_all_max_score("opsines.fasta.txt"))
+    print(UPGMA("opsines.fasta.txt"))
+    
