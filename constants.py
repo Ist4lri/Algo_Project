@@ -50,3 +50,4 @@ BLOSUM62 = array([[9, -1, -1, 0, -3, -3, -3, -4, -3, -3, -3, -3, -3, -1, -1, -1,
 for i in range(number_aa-1):
     for j in range(i+1, number_aa):
         BLOSUM62[j, i] = BLOSUM62[i, j]
+
