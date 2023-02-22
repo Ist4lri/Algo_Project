@@ -1,0 +1,78 @@
+from constants import *
+from numpy import array
+
+
+def needleman_wunsch(seq1, seq2, matrix, gap=-1) -> int:
+    """
+    Algorithme de Needleman-Wunsch pour aligner deux séquences
+
+    Arguments:
+    seq1 -- première séquence (str)
+    seq2 -- deuxième séquence (str)
+    gap -- score de trou (int, default=-1)
+
+    Retourne:
+    score -- score d'alignement (int)
+    """
+
+    # Initialisation de la matrice de scores
+    n = len(seq1)
+    m = len(seq2)
+    score_matrix = [[0] * (m+1) for i in range(n+1)]
+
+    # Initialisation de la première ligne et colonne de la matrice
+    for i in range(1, n+1):
+        score_matrix[i][0] = gap * i
+    for j in range(1, m+1):
+        score_matrix[0][j] = gap * j
+
+    # Remplissage de la matrice de scores
+    for i in range(1, n+1):
+        for j in range(1, m+1):
+            indice_lig = DAA[seq1[i-1]]
+            indice_col = DAA[seq2[j-1]]
+            match_mismatch_score = matrix[indice_lig, indice_col]
+            score_matrix[i][j] = max(
+                score_matrix[i-1][j-1] +
+                match_mismatch_score,  # Correspondance
+                score_matrix[i-1][j] + gap,  # Trou dans seq1
+                score_matrix[i][j-1] + gap  # Trou dans seq2
+            )
+
+    return score_matrix[n][m]
+
+
+def open_fasta(filename) -> dict:
+    list_of_seq = {}
+    acid_amine = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q',
+                  'N', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'W', 'Y', 'F']
+    with open(filename, 'r') as file:
+        for line in file:
+            if not line.startswith(">") and line.strip().split() in acid_amine:
+                return False
+            elif line.startswith(">"):
+                temp_header = line.strip()
+                list_of_seq[line.strip()] = ""
+            else:
+                list_of_seq[temp_header] += line.strip()
+        return list_of_seq
+
+
+def get_all_max_score(filename):
+    fasta_dict = open_fasta(filename)
+    index_dict = len(fasta_dict)
+    matrix_distance = array([[0] * (index_dict+1)
+                            for _ in range(index_dict+1)])
+    for i in range(1, index_dict+1):
+        matrix_distance[i][0] = i
+    for j in range(1, index_dict+1):
+        matrix_distance[0][j] = j
+    print(matrix_distance)
+
+    # for index in fasta_dict.keys():
+    #     for key, value in fasta_dict.items():
+    #         if index != key:
+
+
+if __name__ == "__main__":
+    print(get_all_max_score("opsines.fasta.txt"))

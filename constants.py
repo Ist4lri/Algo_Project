@@ -6,7 +6,6 @@ AA_ARRAY = array(['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q',
                  'N', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'W', 'Y', 'F', '-'])
 number_aa = len(AA_ARRAY)
 DAA = {letter: i for i, letter in enumerate(AA_ARRAY)}
-print(DAA)
 
 # BLOSUM pour le score de ubstiturtoin. (Tableau de 20X20)
 BLOSUM62 = array([[9, -1, -1, 0, -3, -3, -3, -4, -3, -3, -3, -3, -3, -1, -1, -1, -1, -2, -2, -2, -1],
@@ -52,4 +51,3 @@ for i in range(number_aa-1):
     for j in range(i+1, number_aa):
         BLOSUM62[j, i] = BLOSUM62[i, j]
 
-print(BLOSUM62)
