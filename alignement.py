@@ -80,9 +80,20 @@ def get_all_max_score(filename):
                     seq_one, seq_two, BLOSUM62)
     return matrix_distance
 
-    # for index in fasta_dict.keys():
-    #     for key, value in fasta_dict.items():
-    #         if index != key:
+
+def find_upgma(matrix_distance):
+    the_mini = {}
+    mini = 100000
+    the_mini[mini] = [0, 0]
+    for x in range(1, len(matrix_distance)):
+        for y in range(1, len(matrix_distance)):
+            if x != y:
+                temp_min = matrix_distance[x, y]
+                if temp_min < mini:
+                    del the_mini[mini]
+                    mini = temp_min
+                    the_mini[mini] = [x, y]
+    return the_mini
 
 
 if __name__ == "__main__":
