@@ -1,5 +1,5 @@
 from constants import *
-from numpy import array
+from numpy import array, delete, where
 
 
 def needleman_wunsch(seq1, seq2, matrix, gap=-1) -> int:
@@ -61,23 +61,27 @@ def open_fasta(filename) -> dict:
 def get_all_max_score(filename):
     counter_col = 0
     counter_lig = 0
+    list_name_clades = []
     fasta_dict = open_fasta(filename)
     index_dict = len(fasta_dict)
-    matrix_distance = array([[0] * (index_dict+1)
+    matrix_distance = array([[0] * (index_dict)
                             for _ in range(index_dict+1)])
-    for i in range(1, index_dict+1):
-        matrix_distance[i][0] = i
-    for j in range(1, index_dict+1):
-        matrix_distance[0][j] = j
+    for i in range(len(matrix_distance)+1):
+        list_name_clades.append("seq"+str(i+1))
     for header in fasta_dict.keys():
         counter_col = 0
         counter_lig += 1
         seq_one = fasta_dict[header]
         for key, seq_two in fasta_dict.items():
-            counter_col += 1
+            if counter_col >= counter_lig:
+                break
             if header != key:
                 matrix_distance[counter_lig, counter_col] = needleman_wunsch(
                     seq_one, seq_two, BLOSUM62)
+            counter_col += 1
+    matrix_distance = delete(matrix_distance, 0, 0)
+    matrix_distance = delete(matrix_distance, 0, 0)
+
     return matrix_distance
 
 
