@@ -59,6 +59,8 @@ def open_fasta(filename) -> dict:
 
 
 def get_all_max_score(filename):
+    counter_col = 0
+    counter_lig = 0
     fasta_dict = open_fasta(filename)
     index_dict = len(fasta_dict)
     matrix_distance = array([[0] * (index_dict+1)
@@ -67,7 +69,16 @@ def get_all_max_score(filename):
         matrix_distance[i][0] = i
     for j in range(1, index_dict+1):
         matrix_distance[0][j] = j
-    print(matrix_distance)
+    for header in fasta_dict.keys():
+        counter_col = 0
+        counter_lig += 1
+        seq_one = fasta_dict[header]
+        for key, seq_two in fasta_dict.items():
+            counter_col += 1
+            if header != key:
+                matrix_distance[counter_lig, counter_col] = needleman_wunsch(
+                    seq_one, seq_two, BLOSUM62)
+    return matrix_distance
 
     # for index in fasta_dict.keys():
     #     for key, value in fasta_dict.items():
