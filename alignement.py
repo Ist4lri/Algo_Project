@@ -102,8 +102,9 @@ def get_all_max_score(filename):
     return matrix_distance
 
 
-def find_upgma(matrix_distance):
-    """_summary_
+def find_closer_upgma(matrix_distance):
+    """find the two clades to merge first by finding
+    the minimal distance in the given matrix.
 
     Args:
         matrix_distance (list): Tableau des distances
@@ -111,19 +112,16 @@ def find_upgma(matrix_distance):
     Returns:
         int: the minimum of the all the score
     """
-    the_mini = {}
     mini = 100000
-    the_mini[mini] = [0, 0]
-    for x in range(1, len(matrix_distance)):
-        for y in range(1, len(matrix_distance)):
+    for x in range(0, len(matrix_distance)):
+        for y in range(0, len(matrix_distance)):
             if x != y:
                 temp_min = matrix_distance[x, y]
-                if temp_min < mini:
-                    del the_mini[mini]
-                    mini = temp_min
-                    the_mini[mini] = [x, y]
-    return the_mini
+                if temp_min < mini and temp_min != 0 :
+                    mini, line_min, col_min = temp_min, x+1, y+1
+    return mini, line_min, col_min
 
 
 if __name__ == "__main__":
-    print(get_all_max_score("opsines.fasta.txt"))
+    print("\n", get_all_max_score("opsines_juste4.fasta.txt"))
+    print("\n", find_closer_upgma(get_all_max_score("opsines_juste4.fasta.txt")))
