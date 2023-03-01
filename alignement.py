@@ -43,6 +43,14 @@ def needleman_wunsch(seq1, seq2, matrix, gap=-1) -> int:
 
 
 def open_fasta(filename) -> dict:
+    """open fasta and return all the sequence in a dictionnary
+
+    Args:
+        filename (str): path to file
+
+    Returns:
+        dict: all the seq of the file
+    """
     list_of_seq = {}
     acid_amine = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q',
                   'N', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'W', 'Y', 'F']
@@ -59,6 +67,14 @@ def open_fasta(filename) -> dict:
 
 
 def get_all_max_score(filename):
+    """get the max score of all sequence
+
+    Args:
+        filename (str): path of the file
+
+    Returns:
+        list: array of array with all score
+    """
     counter_col = 0
     counter_lig = 0
     list_name_clades = []
@@ -87,6 +103,14 @@ def get_all_max_score(filename):
 
 
 def find_upgma(matrix_distance):
+    """_summary_
+
+    Args:
+        matrix_distance (list): Tableau des distances
+
+    Returns:
+        int: the minimum of the all the score
+    """
     the_mini = {}
     mini = 100000
     the_mini[mini] = [0, 0]
