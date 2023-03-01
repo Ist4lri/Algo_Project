@@ -1,5 +1,5 @@
 from constants import *
-from numpy import array, delete, where
+from numpy import array, delete
 
 
 def needleman_wunsch(seq1, seq2, matrix, gap=-1) -> int:
@@ -97,7 +97,6 @@ def get_all_max_score(filename):
                     seq_one, seq_two, BLOSUM62)
             counter_col += 1
     matrix_distance = delete(matrix_distance, 0, 0)
-    matrix_distance = delete(matrix_distance, 0, 0)
 
     return matrix_distance
 
@@ -117,11 +116,12 @@ def find_closer_upgma(matrix_distance):
         for y in range(0, len(matrix_distance)):
             if x != y:
                 temp_min = matrix_distance[x, y]
-                if temp_min < mini and temp_min != 0:
-                    mini, line_min, col_min = temp_min, x+1, y+1
-    return mini, line_min, col_min
+                if temp_min < mini:
+                    del the_mini[mini]
+                    mini = temp_min
+                    the_mini[mini] = [x, y]
+    return the_mini
 
 
 if __name__ == "__main__":
-    print("\n", get_all_max_score("opsines_juste4.fasta.txt"))
-    print("\n", find_closer_upgma(get_all_max_score("opsines_juste4.fasta.txt")))
+    print(get_all_max_score("opsines.fasta.txt"))
