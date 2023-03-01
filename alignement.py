@@ -107,7 +107,7 @@ def find_closer_upgma(matrix_distance):
     the minimal distance in the given matrix.
 
     Args:
-        matrix_distance (list): Tableau des distances
+        matrix_distance (list): matrix of the distances
 
     Returns:
         int: the minimum of the all the score
@@ -120,6 +120,26 @@ def find_closer_upgma(matrix_distance):
                 if temp_min < mini and temp_min != 0 :
                     mini, line_min, col_min = temp_min, x+1, y+1
     return mini, line_min, col_min
+
+def tree_with_upgma(matrix_distance) :
+    """creates a tree in newick format thank to a matrix distance using upgma
+    This function call the find_cloder_upgma function
+
+    Args:
+        matrix_distance (matrix): matrix of the distances
+    
+    Returns:
+        tree in newick format
+    """
+    # On a une matrice de distance
+    # Tant que matrice plus grande que deux séquences à merger.
+        # UPGMA et on récupère le min + les lignes à merger
+        # On utilise une fonction pour merger les lignes (en gardant les noms des lignes et les associant)
+            # pour ça on fait les moyennes entre les lignes.
+            # on utilise la liste des noms des clades pour merger les bons noms entre eux.
+            # cette fonction return une matrice plus petite et la liste imbriquée avec les noms des clades
+    # Une fois qu'on a l'ordre pour merger, on fait l'arbre avec une autre fonction.
+    # return l'arbre au format newick.
 
 
 if __name__ == "__main__":
