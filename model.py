@@ -30,4 +30,6 @@ class Model():
                     self.list_of_seq[line.strip()] = ""
                 else:
                     self.list_of_seq[temp_header] += line.strip()
-            return self.list_of_seq
+
+    def file_close(self):
+        self.file.close()

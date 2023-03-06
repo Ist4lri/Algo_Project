@@ -1,6 +1,7 @@
 """For the Visual part of the app"""
 from tkinter import Listbox, Button, Tk, Label, Entry, LabelFrame
 from tkinter.messagebox import showinfo, showerror
+from tkinter import filedialog
 
 
 class Application(Tk):
@@ -33,7 +34,10 @@ class Application(Tk):
         self.subLabel.pack(fill="both", expand="yes", padx=30, pady=20)
 
     def open_file(self):
-        print("bite")
+        """To Open another file than the default fasta file"""
+        filename = filedialog.askopenfilename(
+            title="Chosse File", filetypes=(("fasta file", "faa"), ("fasta file", "fasta")))
+        self.controller.open_other_file(filename)
 
     def show_alignement(self):
         print("bite")
