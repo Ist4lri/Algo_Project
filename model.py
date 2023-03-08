@@ -9,6 +9,7 @@ class Model():
     def __init__(self):
         """Init of the class"""
         self.dict_of_seq = {}
+        self.alignement = Alignement()
 
     def read_file(self, filename, opening) -> dict:
         """open fasta and return all the sequence in a dictionnary
@@ -30,3 +31,15 @@ class Model():
                     self.dict_of_seq[line.strip()] = ""
                 else:
                     self.dict_of_seq[temp_header] += line.strip()
+        print(self.alignement.get_all_max_score(self.dict_of_seq))
+
+    def send_dict(self) :
+        self.alignement.get_all_max_score(self.dict_of_seq)
+        
+if __name__ == "__main__" :
+    model = Model()
+    align = Alignement()
+    model.read_file("opsines_juste4.fasta.txt", "r")
+    model.alignement.get_all_max_score(model.dict_of_seq)
+    print(align.send_to_upgma())
+    
