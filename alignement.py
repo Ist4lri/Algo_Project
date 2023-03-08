@@ -117,7 +117,7 @@ def find_closer_upgma(matrix_distance):
         for y in range(0, len(matrix_distance)):
             if x != y:
                 temp_min = matrix_distance[x, y]
-                if temp_min < mini and temp_min != 0 :
+                if temp_min < mini and temp_min != 0:
                     mini, line_min, col_min = temp_min, x+1, y+1
     return mini, line_min, col_min
 
