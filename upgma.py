@@ -2,14 +2,13 @@ from numpy import delete, zeros
 from arbre import BinaryTree
 
 class Upgma() :
-    
     def __init__(self) :
         """_summary_
         """
-        self.mini = 100000
+        self.mini = 0
         self.line_min = 0
         self.col_min = 0
-        self.matrice_temp = []
+        
     
     def find_closer_upgma(self, matrice_distance):
         """find the two clades to merge first by finding
@@ -21,17 +20,18 @@ class Upgma() :
         Returns:
             int: the minimum of the all the score
         """
+        self.mini = 10000
+        self.line_min = 0
+        self.col_min = 0
         # Go through the mat to find the minimum :
         for x in range(0, len(matrice_distance)):
             for y in range(0, len(matrice_distance)):
-                # Not comparing a seq with itself !
-                if x != y:
-                    # Temp_min = a value at axes x and y
-                    temp_min = matrice_distance[x, y]
-                    # New temp min if less than previous one
-                    if temp_min < self.mini and temp_min != 0 :
-                        # udpate the mini and its localisation in the matrix
-                        self.mini, self.line_min, self.col_min = temp_min, x+1, y+1
+                # Temp_min = a value at axes x and y
+                temp_min = matrice_distance[x, y]
+                # New temp min if less than previous one
+                if temp_min < self.mini and temp_min != 0 :
+                    # udpate the mini and its localisation in the matrix
+                    self.mini, self.line_min, self.col_min = temp_min, x, y
 
     def update_upgma(self, matrice_dist) :
         """_summary_
@@ -39,16 +39,40 @@ class Upgma() :
         Args:
             matrice_dist (_type_): _description_
         """
+        
+        
         # Initialisation of the matrix
+        print(matrice_dist,"\n")
         size_matrix = len(matrice_dist)
-        self.matrice_temp = zeros((size_matrix+1, size_matrix+1))
+        matrice_temp = zeros((size_matrix+1,size_matrix+1))
         # Copy the dist_matrix
-        self.matrice_temp[1:,1:] = matrice_dist
+        matrice_temp[1:,1:] = matrice_dist
         # For each group -> mean of the two values we merge.
+        print(self.mini, self.line_min, self.col_min,"\n")
+        if self.col_min == 0 :
+            self.col_min += 2
+        if self.line_min == 0 :
+            self.line_min += 1
         for i in range(1, size_matrix+1) :
-            self.matrice_temp[0, i] = (self.matrice_temp[self.line_min+1, i] + self.matrice_temp[self.col_min+1, i])/2
+            matrice_temp[i, 0] = (matrice_temp[self.line_min+1, i] +
+                                  matrice_temp[self.col_min+1,i])/2
         # Delete the line of one of the two groups we merged.
-        self.matrice_temp = delete(self.matrice_temp,[self.line_min+1, self.col_min+1],axis=0)
+        print(matrice_temp,"\n")
+        matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=0)
+        matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=1)
+        print(matrice_temp,"\n")
+        return matrice_temp
+    
+    # def update_wpgma(distance,i,j):
+	# n = len(distance)
+	# new = np.zeros((n+1,n+1))
+	# new[1:,1:] = distance
+	# for m in range(1,n+1):
+	# 	new[0,m] = (new[i+1,m] + new[j+1,m])/2
+	# 	new[m,0] = new[0,m]
+	# new = np.delete(new,[i+1,j+1],axis=0)
+	# new = np.delete(new,[i+1,j+1],axis=1)
+	# return new
     
 
     def tree_with_upgma(self, dist_matrix, clades_names) :
@@ -65,13 +89,16 @@ class Upgma() :
         length = len(clades_names)
         for i in range(length-1):
             self.find_closer_upgma(dist_matrix)
-            print(dist_matrix)
             clades[self.line_min].branch_length = self.mini/2 - clades[self.line_min].depth
             clades[self.col_min].branch_length = self.mini/2 - clades[self.col_min].depth
             new_clade = clades[self.line_min].join(clades[self.col_min])
             new_clade.depth = self.mini/2
-            dist_matrix = self.update_upgma(dist_matrix)
-        return clades[0]
+            if len(dist_matrix) > 2:
+                dist_matrix = self.update_upgma(dist_matrix)
+                clades = [new_clade] + clades[:self.line_min-1]+clades[self.line_min:self.col_min-1]+clades[self.col_min:]
+        clades = [new_clade] + clades[:self.line_min-1]+clades[self.line_min:self.col_min-1]+clades[self.col_min:]
+        print(clades[0].newick())
+        return clades[0].newick()
        
        
 # def wpgma(distance,names):
@@ -128,7 +155,7 @@ if __name__ == "__main__":
 
 # if __name__ == "__main__":
 # 	# On definit la matrice de distance
-# 	d = np.array([[0,5,9,9,8],
+# 	d = np.array([  [0,5,9,9,8],
 # 					[5,0,10,10,9],
 # 					[9,10,0,8,7],
 # 					[9,10,8,0,3],

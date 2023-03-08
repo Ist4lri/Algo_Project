@@ -5,7 +5,7 @@ from upgma import Upgma
 class Alignement() :
     
     def __init__(self) :
-        self.upgma = Upgma
+        self.upgma = Upgma()
         self.clades_names = []
         self.matrice_distance = []
         self.temp_matrice = []
@@ -82,10 +82,14 @@ class Alignement() :
                         seq_one, seq_two, BLOSUM62)
                 counter_col += 1
         # To delete the first line of zeros :
-        self.matrice_distance = delete(self.matrice_distance, 0, 0)
-
-    def send_to_upgma(self):
-        self.upgma.tree_with_upgma(self.upgma, self.matrice_distance, self.clades_names)
+        self.matrice_distance = delete(self.matrice_distance, 0, axis=0)
+        
+        self.to_upgma(self.matrice_distance, self.clades_names)
+        
+        
+    def to_upgma(self, distance_matrix, clades_names):
+        self.upgma.tree_with_upgma(distance_matrix, clades_names)
+        
 
 if __name__ == "__main__":
     align = Alignement()
