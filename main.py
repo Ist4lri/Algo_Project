@@ -11,7 +11,6 @@ class Controller():
         self.view.view_window()
 
     def open_other_file(self, filename):
-        self.model.file_close()
         self.model.read_file(filename, opening="r")
 
 
