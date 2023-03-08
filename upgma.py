@@ -61,7 +61,7 @@ class Upgma() :
         Returns:
             tree in newick format
         """
-        clades = [BinaryTree([name,[],[]] for name in clades_names)]
+        clades = [BinaryTree([name,[],[]]) for name in clades_names]
         length = len(clades_names)
         for i in range(length-1):
             self.find_closer_upgma(dist_matrix)

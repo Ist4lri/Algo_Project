@@ -85,7 +85,7 @@ class Alignement() :
         self.matrice_distance = delete(self.matrice_distance, 0, 0)
 
     def send_to_upgma(self):
-        self.upgma.tree_with_upgma(self, self.matrice_distance, self.clades_names)
+        self.upgma.tree_with_upgma(self.upgma, self.matrice_distance, self.clades_names)
 
 if __name__ == "__main__":
     align = Alignement()

@@ -38,8 +38,7 @@ class Model():
         
 if __name__ == "__main__" :
     model = Model()
-    align = Alignement()
     model.read_file("opsines_juste4.fasta.txt", "r")
     model.alignement.get_all_max_score(model.dict_of_seq)
-    print(align.send_to_upgma())
+    print(model.alignement.upgma.tree_with_upgma(model.alignement.upgma, model.alignement.matrice_distance, model.alignement.clades_names))
     
