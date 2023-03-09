@@ -39,8 +39,6 @@ class Upgma() :
         Args:
             matrice_dist (_type_): _description_
         """
-        
-        
         # Initialisation of the matrix
         print(matrice_dist,"\n")
         size_matrix = len(matrice_dist)
@@ -49,15 +47,11 @@ class Upgma() :
         matrice_temp[1:,1:] = matrice_dist
         # For each group -> mean of the two values we merge.
         print(self.mini, self.line_min, self.col_min,"\n")
-        if self.col_min == 0 :
-            self.col_min += 2
-        if self.line_min == 0 :
-            self.line_min += 1
         for i in range(1, size_matrix+1) :
             matrice_temp[i, 0] = (matrice_temp[self.line_min+1, i] +
                                   matrice_temp[self.col_min+1,i])/2
+            matrice_temp[0, i] = matrice_temp[i, 0]
         # Delete the line of one of the two groups we merged.
-        print(matrice_temp,"\n")
         matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=0)
         matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=1)
         print(matrice_temp,"\n")
@@ -93,10 +87,10 @@ class Upgma() :
             clades[self.col_min].branch_length = self.mini/2 - clades[self.col_min].depth
             new_clade = clades[self.line_min].join(clades[self.col_min])
             new_clade.depth = self.mini/2
-            if len(dist_matrix) > 2:
+            if len(dist_matrix) > 1:
                 dist_matrix = self.update_upgma(dist_matrix)
-                clades = [new_clade] + clades[:self.line_min-1]+clades[self.line_min:self.col_min-1]+clades[self.col_min:]
-        clades = [new_clade] + clades[:self.line_min-1]+clades[self.line_min:self.col_min-1]+clades[self.col_min:]
+                clades = [new_clade] + clades[:self.line_min]+clades[self.line_min+1:self.col_min]+clades[self.col_min+1:]
+        #clades = [new_clade] + clades[:self.line_min-1]+clades[self.line_min:self.col_min-1]+clades[self.col_min:]
         print(clades[0].newick())
         return clades[0].newick()
        

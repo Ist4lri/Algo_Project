@@ -73,9 +73,6 @@ class Alignement() :
             counter_lig += 1
             seq_one = fasta_dict[header]
             for key, seq_two in fasta_dict.items():
-                # if not the same seq :
-                if counter_col >= counter_lig:
-                    break
                 if header != key:
                     # find the score between both seq and put it in the distance mat :
                     self.matrice_distance[counter_lig, counter_col] = self.needleman_wunsch(
@@ -93,3 +90,4 @@ class Alignement() :
 
 if __name__ == "__main__":
     align = Alignement()
+    

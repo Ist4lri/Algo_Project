@@ -35,5 +35,5 @@ class Model():
         
 if __name__ == "__main__" :
     model = Model()
-    model.read_file("opsines_juste4.fasta.txt", "r")
+    model.read_file("opsines.fasta.txt", "r")
     model.alignement.get_all_max_score(model.dict_of_seq)
