@@ -1,5 +1,7 @@
 class BinaryTree:
     def __init__(self,l):
+        self.newick_dict = {}
+        
         if len(l) == 0:
             self.val = None
             self.nLeaf = 0
@@ -48,6 +50,31 @@ class BinaryTree:
                 s = s + str(self.right)
             return s
 
+
+    def parse_newick(self, newick):
+        """Fonction pour parser le newick en un arbre sous forme de dictionnaire
+
+        Args:
+            newick (string): The newick format of tree
+
+        Returns:
+            dictionnary: The Newick in dictionnary
+        """
+        newick = newick.replace("(", "{").replace(")", "}")
+        newick = newick.split(";")[0]
+        newick_list = newick.split(",")
+        self.newick_dict = {}
+        for node in newick_list:
+            node_name = node.split(":")[0].replace("(", "").replace(")", "").replace("{", "").replace("}", "")
+            node_dist = float(node.split(":")[1].replace(",", ".").rstrip("}"))
+            if "{" in node_name:
+                clade1, clade2 = node_name.split("{")[1].split("}")
+                clade1_name, clade1_dist = clade1.split(":")
+                clade2_name, clade2_dist = clade2.split(":")
+                self.newick_dict[node_name] = {"clades": [clade1_name, clade2_name], "distances": [float(clade1_dist), float(clade2_dist)], "dist": node_dist}
+            else:
+                self.newick_dict[node_name] = node_dist
+        return self.newick_dict
     
 if __name__ == "__main__":
     # On teste la crÃ©ation d'un arbre

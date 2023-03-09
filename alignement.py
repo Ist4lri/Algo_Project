@@ -1,5 +1,5 @@
 from constants import *
-from numpy import array, delete
+from numpy import array, delete, zeros
 from upgma import Upgma
 
 class Alignement() :
@@ -11,8 +11,14 @@ class Alignement() :
         self.temp_matrice = []
         self.temp_clades_names = []
         self.temp_tree = []
-
-
+        self.freq_matrix = []
+        self.dir_matrix = []
+        self.dict_tree = {}
+        self.dict_sequence_tree = {}
+        self.group_sequence_align = []
+        self.second_groupe_align = []
+        
+    
     def needleman_wunsch(self, seq1, seq2, matrix, gap=-1) -> int:
         """
         Algorithme de Needleman-Wunsch pour aligner deux séquences
@@ -80,14 +86,35 @@ class Alignement() :
                 counter_col += 1
         # To delete the first line of zeros :
         self.matrice_distance = delete(self.matrice_distance, 0, axis=0)
-        
+        # To UPGMA :
         self.to_upgma(self.matrice_distance, self.clades_names)
         
         
     def to_upgma(self, distance_matrix, clades_names):
-        self.upgma.tree_with_upgma(distance_matrix, clades_names)
+        self.dict_tree  = self.upgma.tree_with_upgma(distance_matrix, clades_names)
+        self.multiple_alignement()
         
-
+    
+    def multiple_alignement(self):
+        for k, v in sorted(self.dict_tree.items(), key=lambda x: x[1]):
+            del self.dict_tree[k]
+            self.dict_tree[k] = v
+        for i in range(len(self.dict_tree)):
+            if i+1 != i+2:
+                print("bite")
+                #Merge les seq i et i+1
+                #Calcul le sfreq entre seq i et i+1 de cette matrice
+                #alignement needleman, matrice direction, qui ressort tuple ou liste de seqs (même taille avec gap)
+                #update dico pour fusionner les 2
+            else:
+                print("Oui")
+                #Merge i+1 et i+2
+                #
+        
+            
+    
+ 
 if __name__ == "__main__":
     align = Alignement()
-    
+    print(align.calculate_frequencies(["ARNDCQEGHILKMFPSTWY", "ARNDCQEGHILKMFPSTWY", "ARNDCQEGHILKMFPSTWY"]))
+

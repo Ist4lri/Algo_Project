@@ -40,13 +40,11 @@ class Upgma() :
             matrice_dist (_type_): _description_
         """
         # Initialisation of the matrix
-        print(matrice_dist,"\n")
         size_matrix = len(matrice_dist)
         matrice_temp = zeros((size_matrix+1,size_matrix+1))
         # Copy the dist_matrix
         matrice_temp[1:,1:] = matrice_dist
         # For each group -> mean of the two values we merge.
-        print(self.mini, self.line_min, self.col_min,"\n")
         for i in range(1, size_matrix+1) :
             matrice_temp[i, 0] = (matrice_temp[self.line_min+1, i] +
                                   matrice_temp[self.col_min+1,i])/2
@@ -54,7 +52,6 @@ class Upgma() :
         # Delete the line of one of the two groups we merged.
         matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=0)
         matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=1)
-        print(matrice_temp,"\n")
         return matrice_temp
     
     # def update_wpgma(distance,i,j):
@@ -91,8 +88,7 @@ class Upgma() :
                 dist_matrix = self.update_upgma(dist_matrix)
                 clades = [new_clade] + clades[:self.line_min]+clades[self.line_min+1:self.col_min]+clades[self.col_min+1:]
         #clades = [new_clade] + clades[:self.line_min-1]+clades[self.line_min:self.col_min-1]+clades[self.col_min:]
-        print(clades[0].newick())
-        return clades[0].newick()
+        return clades[0].parse_newick(clades[0].newick())
        
        
 # def wpgma(distance,names):
