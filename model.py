@@ -35,12 +35,10 @@ class Model():
                     self.dict_real_name[f'seq{counter}'] = temp_header
                 else:
                     self.dict_of_seq[f'seq{counter}'] += line.strip()
-            print(self.dict_of_seq)
-            print(self.dict_real_name)
         self.alignement.dict_sequence_tree = self.dict_of_seq
 
         
 if __name__ == "__main__" :
     model = Model()
-    model.read_file("opsines_juste4.fasta.txt", "r")
+    model.read_file("opsines.fasta.txt", "r")
     model.alignement.get_all_max_score(model.dict_of_seq)
