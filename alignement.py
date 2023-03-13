@@ -8,12 +8,13 @@ class Alignement() :
         self.upgma = Upgma()
         self.clades_names = [] #Liste des noms de séquences (en seqX)
         self.matrice_distance = [] #Matrice de distance
-        self.freq_matrix = [] #Matrice de fréquences
         self.dir_matrix = [] #Matrice des directions (Après 2e NW)
         self.dict_tree = {} #Dico après premier UPGMA arbre {'seqX' : distance}
         self.dict_sequence_tree = {} #Dico avec les séquences pour alignement {'seqX' :  AGTCGAT...}
-        self.group_sequence_align = [] #Multiple alignement
-        self.second_groupe_align = [] #Si y'a un autre multiple alignement
+        self.alignement1 = [] # Premier alignement
+        self.alignement2 = [] # Deuxième alignement si nécessaire
+        self.freq_mat1 = [] # matrice de fréquences pour l'alignement1
+        self.freq_mat2 = [] # matrice de fréquences pour l'alignement2
         
     
     def needleman_wunsch(self, seq1, seq2, matrix, gap=-1) -> int:
@@ -84,124 +85,171 @@ class Alignement() :
         # To delete the first line of zeros :
         self.matrice_distance = delete(self.matrice_distance, 0, axis=0)
         # To UPGMA :
-        self.to_upgma(self.matrice_distance, self.clades_names)
+        self.upgma_to_multiple_align(self.matrice_distance, self.clades_names)
         
         
-    def to_upgma(self, distance_matrix, clades_names):
+    def upgma_to_multiple_align(self, distance_matrix, clades_names):
         self.dict_tree  = self.upgma.tree_with_upgma(distance_matrix, clades_names)
         self.multiple_alignement()
 
-    def freq_matrix(self, seq_list):
+
+    def freq_matrix_calc(self, seq_list):
         """Cette fonction prend une liste de séquences d'acides aminés et retourne une matrice de fréquence"""
+        # Liste des acides aminés
+        amino_acids = "CSTAGPDEQNHRKMILVWYF-"
+        # Initialisation de la matrice avec des zéros
         num_seq = len(seq_list)
         seq_len = len(seq_list[0])
-        freq_matrix = np.zeros((seq_len, 20))
+        freq_matrix = zeros((seq_len, len(amino_acids)))
+        # Remplissage de la matrice de fréquences
         for i in range(seq_len):
             for j in range(num_seq):
-                if seq_list[j][i] != "-":
-                    freq_matrix[i][ord(seq_list[j][i])-65] += 1
+                indice_aa_dans_matrice = amino_acids.find(seq_list[j][i])
+                freq_matrix[i][indice_aa_dans_matrice] += 1
         freq_matrix /= num_seq
         return freq_matrix
 
-    def needleman_wunsch_profile(self, seq1, seq2, matrix, gap=-4):
-        """Cette fonction prend en entrée deux profils de séquences multiples, une matrice de score, et une valeur de gap (par défaut -4) et renvoie un nouveau profil aligné"""
+
+    def needleman_wunsch_profile(self, seq1 : list, seq2 : list, matrix : list, gap=-4):
+        """Cette fonction prend en entrée deux profils de séquences multiples, une matrice de score,
+        et une valeur de gap (par défaut -4) et renvoie un nouveau profil aligné"""
+        if type(seq1) is not list :
+            seq1 = [seq1]
+        if type(seq2) is not list :
+            seq2 = [seq2]
+        len_seq1 = len(seq1[0]) + 1
+        len_seq2 = len(seq2[0]) + 1
         
-        # Calcul des matrices de fréquence pour les deux profils
-        freq_matrix1 = self.freq_matrix(seq1)
-        freq_matrix2 = self.freq_matrix(seq2)
+        freq_mat1 = self.freq_matrix_calc(seq1)
+        freq_mat2 = self.freq_matrix_calc(seq2)
+        
+        print("\nF_mat1 : ", freq_mat1, "\n")
+        print("\nF_mat2 : ", freq_mat2, "\n")
         
         # Initialisation de la matrice des scores et de direction
-        m = len(seq1[0]) + 1
-        n = len(seq2[0]) + 1
-        score_matrix = zeros((m, n))
-        direction_matrix = zeros((m, n))
-        for i in range(1, m):
+        score_matrix = zeros((len_seq1, len_seq2))
+        direction_matrix = zeros((len_seq1, len_seq2))
+        for i in range(1, len_seq1):
             score_matrix[i][0] = score_matrix[i-1][0] + gap
             direction_matrix[i][0] = 1
-        for j in range(1, n):
+        for j in range(1, len_seq2):
             score_matrix[0][j] = score_matrix[0][j-1] + gap
             direction_matrix[0][j] = 2
         
         # Remplissage de la matrice des scores et de direction
-        for i in range(1, m):
-            for j in range(1, n):
+        for i in range(1, len_seq1):
+            for j in range(1, len_seq2):
                 # Calcul du score pour un alignement diagonal
-                diag_score = score_matrix[i-1][j-1] + sum(freq_matrix1[i-1] * matrix * freq_matrix2[j-1])
+                print("\nA : ", seq1.index(seq1[i-1]))
+                print("\nB : ", seq2.index(seq2[j-1]))
+                print("\nC : ", matrix[seq1.index(seq1[i-1]), seq2.index(seq2[j-1])])
+                diag_score = sum(score_matrix[i-1][j-1] + freq_mat1[i-1] * matrix[seq1.index(seq1[i-1]), seq2.index(seq2[j-1])] * freq_mat2[j-1])
+                print("\nDiag_score : ", diag_score)
                 # Calcul du score pour un alignement vertical
                 up_score = score_matrix[i-1][j] + gap
+                print("\nUp_score : ", up_score)
                 # Calcul du score pour un alignement horizontal
                 left_score = score_matrix[i][j-1] + gap
+                print("\nLeft_score : ", left_score)
                 # Choix du score maximum et de la direction correspondante
                 score_matrix[i][j], direction_matrix[i][j] = max((diag_score, 0), (up_score, 1), (left_score, 2))
         
         # Construction du nouvel alignement
         aligned_seq1 = []
         aligned_seq2 = []
-        i = m - 1
-        j = n - 1
-        while i > 0 or j > 0:
-            direction = direction_matrix[i][j]
-            if direction == 0:
-                aligned_seq1.append("".join(seq1[k][i-1] for k in range(len(seq1))))
-                aligned_seq2.append("".join(seq2[k][j-1] for k in range(len(seq2))))
-                i -= 1
-                j -= 1
-            elif direction == 1:
-                aligned_seq1.append("".join(seq1[k][i-1] for k in range(len(seq1))))
-                aligned_seq2.append("-" * len(seq2[0]))
-                i -= 1
-            else:
-                aligned_seq1.append("-" * len(seq1[0]))
-                aligned_seq2.append("".join(seq2[k][j-1] for k in range(len(seq2))))
-                j -= 1
         
-        # Inverse les séquences alignées
-        aligned_seq1.reverse()
-        aligned_seq2.reverse()
+        for k in seq1 :
+            new_seq_in_progress1 = ""
+            i = len_seq1 - 1
+            j = len_seq2 - 1
+            while i > 0 or j > 0:
+                direction = direction_matrix[i][j]
+                new_letter = k[i-1]
+                if direction == 0:
+                    new_seq_in_progress1 += new_letter
+                    i -= 1
+                    j -= 1
+                elif direction == 1:
+                    new_seq_in_progress1 += new_letter
+                    i -= 1
+                else:
+                    new_seq_in_progress1 += "-"
+                    j -= 1
+            aligned_seq1.append(new_seq_in_progress1[::-1])
+
+        for k in seq2 :
+            new_seq_in_progress2 = ""
+            i = len_seq1 - 1
+            j = len_seq2 - 1
+            while i > 0 or j > 0:
+                direction = direction_matrix[i][j]
+                new_letter = k[i-1]
+                if direction == 0:
+                    new_seq_in_progress2 += new_letter
+                    i -= 1
+                    j -= 1
+                elif direction == 1:
+                    new_seq_in_progress2 += "-"
+                    i -= 1
+                else:
+                    new_seq_in_progress2 += new_letter
+                    j -= 1
+            aligned_seq2.append(new_seq_in_progress2[::-1])
         
         # Convertir les listes de séquences alignées en une liste de séquences alignées unique
-        num_seq = len(seq1) + len(seq2)
         new_alignment = []
-        for i in range(num_seq):
-            new_alignment.append(aligned_seq1[i] + aligned_seq2[i-len(seq1)])
-        
+        for i in aligned_seq1:
+            new_alignment.append(i)
+        for i in aligned_seq2:
+            new_alignment.append(i)
+
         return new_alignment
     
     def multiple_alignement(self):
+        """_summary_
+        """
         list_seq = []
         list_dist = []
+        # On trie le dico avec en clé les séquences et en valeur la distance (les plus proches en premiers)
         for k, v in sorted(self.dict_tree.items(), key=lambda x: x[1]):
             del self.dict_tree[k]
             self.dict_tree[k] = v
+        # On place les clés et valeurs dans deux listes séparées (c'est trié) :
         for key, value in self.dict_tree.items():
             list_seq.append(key)
             list_dist.append(value)
+        # On sort les séquences à merge du bon dico qui les contient :
+        print(self.dict_tree)
         
-        for i in range(len(list_dist)):
-            if i+1 < len(list_dist):
+        for i in range(len(list_dist)-1):
+            print("\n Etape 0 : ", i)
+            # Si les deux première distances (triées) sont identiques :
+            if list_dist[i] == list_dist[i+1]:
+                espece1 = self.dict_sequence_tree[list_seq[i]]
+                espece2 = self.dict_sequence_tree[list_seq[i+1]]
+                self.alignement1 = self.needleman_wunsch_profile(espece1, espece2, BLOSUM62)
+                i += 2
+                print("\n Etape 1 : ", i)
+                print(self.alignement1)
                 if list_dist[i] == list_dist[i+1]:
-                    self.needleman_wunsch_profile(list_dist)
-                    print("A comparer dans []*, puis comparer à []")
-                else:
-                    print("(A vérifier si la seq a déjà été utilisée...)A comparer avec le []")
-            else:
-                print("ok")
-            
-            if i+1 != i+2:
+                    espece3 = self.dict_sequence_tree[list_seq[i]]
+                    espece4 = self.dict_sequence_tree[list_seq[i+1]]
+                    i += 2
+                    print("\n Etape 2 : ", i)
+                    self.alignement2 = self.needleman_wunsch_profile(espece3, espece4, BLOSUM62)
+                if self.alignement2 != [] :
+                    self.alignement1 = self.needleman_wunsch_profile(self.alignement1, self.alignement2, BLOSUM62)
+                    self.alignement2 = []
+            else :
+                print("\n Etape 3 : ", i)
+                espece_solo = self.dict_sequence_tree[list_seq[i]]
+                self.alignement1
                 print("bite")
-                #Merge les seq i et i+1
-                #Calcul les freq entre seq i et i+1 de cette matrice
-                #alignement needleman, matrice direction, qui ressort tuple ou liste de seqs (même taille avec gap)
-                #update dico pour fusionner les 2
-            else:
-                print("Oui")
-                #Merge i+1 et i+2
-                #
-        
-            
+        print("apres")
+        return self.alignement1
     
  
 if __name__ == "__main__":
     align = Alignement()
-    print(align.calculate_frequencies(["ARNDCQEGHILKMFPSTWY", "ARNDCQEGHILKMFPSTWY", "ARNDCQEGHILKMFPSTWY"]))
+    print(align.multiple_alignement(["ARNDCQEGHILKMFPSTWY", "ARNDCQEGHILKMFPSTWY", "ARNDCQEGHILKMFPSTWY"]))
 
