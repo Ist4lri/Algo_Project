@@ -36,7 +36,7 @@ class Application(Tk):
     def open_file(self):
         """To Open another file than the default fasta file"""
         filename = filedialog.askopenfilename(
-            title="Chosse File", filetypes=(("fasta file", "faa"), ("fasta file", "fasta"), ("text file", "txt")))
+            title="Chosse File", filetypes=(("fasta file", ".faa"), ("fasta file", ".fasta"), ("text file", ".txt")))
         self.controller.open_other_file(filename)
 
     def show_alignement(self):
