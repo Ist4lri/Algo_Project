@@ -41,7 +41,9 @@ class Model():
 if __name__ == "__main__" :
     model = Model()
     # On lance les fonctions dans l'ordre nécessaire !!!
-    model.read_file("opsines_juste4.fasta.txt", "r")
-    model.alignement.get_all_max_score(model.dict_of_seq)
-    model.alignement.multiple_alignement()
+    model.read_file("opsines.fasta.txt", "r")
+    a = model.alignement.get_all_max_score(model.dict_of_seq)
+    b = model.alignement.upgma.tree_with_upgma(a)
+    print(b)
+    #model.alignement.multiple_alignement()
     

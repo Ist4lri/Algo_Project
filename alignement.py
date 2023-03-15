@@ -1,5 +1,6 @@
 from constants import *
-from numpy import array, delete, zeros
+from numpy import array, delete, zeros, ones
+from numpy import max as np_max
 from upgma import Upgma
 
 class Alignement() :
@@ -84,6 +85,16 @@ class Alignement() :
                 counter_col += 1
         # To delete the first line of zeros :
         self.matrice_distance = delete(self.matrice_distance, 0, axis=0)
+        # Transform Needleman-Wunsch matrix to an Upgma matrix :
+        len_mat_dist = len(self.matrice_distance)
+        print(self.matrice_distance)
+        self.matrice_distance = self.matrice_distance - np_max(self.matrice_distance)*ones((len_mat_dist,len_mat_dist))
+        for line in range(len(self.matrice_distance)):
+            for col in range(len(self.matrice_distance)):
+                if self.matrice_distance[line,col] != 0:
+                    self.matrice_distance[line,col] = -self.matrice_distance[line,col]
+        print(self.matrice_distance)
+        #self.matrice_distance = self.upgma.transform_mat_dist(self.matrice_distance)
         # To UPGMA :
         self.upgma_to_multiple_align(self.matrice_distance, self.clades_names)
         
