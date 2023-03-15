@@ -2,13 +2,13 @@ from numpy import delete, zeros
 from arbre import BinaryTree
 
 class Upgma() :
+
     def __init__(self) :
         """_summary_
         """
         self.mini = 0
         self.line_min = 0
         self.col_min = 0
-        
     
     def find_closer_upgma(self, matrice_distance):
         """find the two clades to merge first by finding
