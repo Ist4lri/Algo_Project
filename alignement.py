@@ -70,8 +70,7 @@ class Alignement():
         self.matrice_distance = array([[0] * (index_dict)
                                        for _ in range(index_dict+1)])
         # shorter names :
-        for i in range(len(self.matrice_distance)+1):
-            self.clades_names.append("seq"+str(i+1))
+        self.clades_names = fasta_dict.keys()
         # For each pair of seq :
         for header in fasta_dict.keys():
             counter_col = 0

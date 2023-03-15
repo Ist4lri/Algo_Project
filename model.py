@@ -29,21 +29,19 @@ class Model():
                 if not line.startswith(">") and line.strip().split() in acid_amine:
                     ValueError("Not a fasta file ! Please, verify your file")
                 elif line.startswith(">"):
-                    counter +=1
+                    counter += 1
                     temp_header = line.strip().split('|')[0][1:]
-                    self.dict_of_seq[f'seq{counter}'] = ""
-                    self.dict_real_name[f'seq{counter}'] = temp_header
+                    self.dict_of_seq[temp_header] = ""
                 else:
-                    self.dict_of_seq[f'seq{counter}'] += line.strip()
+                    self.dict_of_seq[temp_header] += line.strip()
         self.alignement.dict_sequence_tree = self.dict_of_seq
 
-        
-if __name__ == "__main__" :
+
+if __name__ == "__main__":
     model = Model()
     # On lance les fonctions dans l'ordre nécessaire !!!
     model.read_file("opsines.fasta.txt", "r")
     a = model.alignement.get_all_max_score(model.dict_of_seq)
     b = model.alignement.upgma.tree_with_upgma(a)
     print(b)
-    #model.alignement.multiple_alignement()
-    
+    # model.alignement.multiple_alignement()
