@@ -86,8 +86,6 @@ class Alignement():
         self.matrice_distance = delete(self.matrice_distance, 0, axis=0)
         # Transform Needleman-Wunsch matrix to an Upgma matrix :
         len_mat_dist = len(self.matrice_distance)
-        print("=============AVANT MODIF=============")
-        print(self.matrice_distance)
         self.matrice_distance = self.matrice_distance - \
             np_max(self.matrice_distance)*ones((len_mat_dist, len_mat_dist))
         for line in range(len(self.matrice_distance)):
@@ -95,8 +93,6 @@ class Alignement():
                 if self.matrice_distance[line, col] != 0:
                     self.matrice_distance[line, col] = - \
                         self.matrice_distance[line, col]
-        print("=============APRES MODIF=============")
-        print(self.matrice_distance)
         #self.matrice_distance = self.upgma.transform_mat_dist(self.matrice_distance)
         # To UPGMA :
         self.upgma_to_multiple_align(self.matrice_distance, self.clades_names)
@@ -108,18 +104,28 @@ class Alignement():
 
     def freq_matrix_calc(self, seq_list):
         """Cette fonction prend une liste de séquences d'acides aminés et retourne une matrice de fréquence"""
-        # Liste des acides aminés
-        amino_acids = "CSTAGPDEQNHRKMILVWYF-"
-        # Initialisation de la matrice avec des zéros
         num_seq = len(seq_list)
         seq_len = len(seq_list[0])
-        freq_matrix = zeros((seq_len, len(amino_acids)))
-        # Remplissage de la matrice de fréquences
-        for i in range(seq_len):
-            for j in range(num_seq):
-                indice_aa_dans_matrice = amino_acids.find(seq_list[j][i])
-                freq_matrix[i][indice_aa_dans_matrice] += 1
+        freq_matrix = zeros((21, seq_len))
+        # Liste des acides aminés
+        amino_acids = "CSTAGPDEQNHRKMILVWYF-"
+        for i in range(num_seq):
+            for j in range(seq_len) :
+                indice_aa_matrice = amino_acids.find(seq_list[i][j])
+                freq_matrix[indice_aa_matrice][j] += 1
         freq_matrix /= num_seq
+        # # Liste des acides aminés
+        # amino_acids = "CSTAGPDEQNHRKMILVWYF-"
+        # # Initialisation de la matrice avec des zéros
+        # num_seq = len(seq_list)
+        # seq_len = len(seq_list[0])
+        # freq_matrix = zeros((seq_len, len(amino_acids)))
+        # # Remplissage de la matrice de fréquences
+        # for i in range(seq_len):
+        #     for j in range(num_seq):
+        #         indice_aa_dans_matrice = amino_acids.find(seq_list[j][i])
+        #         freq_matrix[i][indice_aa_dans_matrice] += 1
+        # freq_matrix /= num_seq
         return freq_matrix
 
     def needleman_wunsch_profile(self, seq1 : list, seq2 : list, matrix : list):
@@ -132,7 +138,7 @@ class Alignement():
             seq1 = [seq1]
         if  type(seq2) is not list:
             seq2 = [seq2]
-
+        
         # On trouve la séquence le profil le plus court (+ petite en ligne, + grande en colonnes)
         if len(seq1[0]) > len(seq2[0]):
             nb_col = len(seq1[0]) +1
@@ -168,14 +174,11 @@ class Alignement():
             # on l'additionne à la fréquence d'un gap * BLOSUM62 * la fréquence observée sur la position
             score_matrix[0][j] = score_matrix[0][j-1] + (gap @ matrix @ freq_matrix1)[j-1]
             direction_matrix[0][j] = 2
-
-        print("\nscore_matrix ap : \n", score_matrix)
         
         # On change de sens pour pouvoir faire le calcul matriciel
         freq_matrix1 = transpose(freq_matrix1)
         freq_matrix2 = transpose(freq_matrix2)
         
-
         # Remplissage de la matrice des scores et de direction
         for i in range(1, nb_col): # taille de la seq la plus longue (seq1)
             for j in range(1, nb_ligne): # taille de la seq la plus courte (seq2)
@@ -192,9 +195,6 @@ class Alignement():
                 
                 score_matrix[j][i], direction_matrix[j][i] = max((diag_score, 0), (up_score, 1), (left_score, 2))
 
-            # aller à gauche met un gap sur la seq de gauche, aller en haut met un gap sur la seq du haut.
-        print("score_matrice après calcul : \n", score_matrix)
-        print("distance_matrice après calcul : \n", direction_matrix)
         # Construction du nouvel alignement
         aligned_seq1 = []
         aligned_seq2 = []
@@ -224,7 +224,6 @@ class Alignement():
                     new_aa_to_join += new_letter
                     j -= 1
             aligned_seq1.append(new_aa_to_join[::-1])
-            print("aligned_seq1 : ", aligned_seq1)
 
         # Pour chaque séquence dans le profile
         for k in shorter_profile:
@@ -259,16 +258,16 @@ class Alignement():
         for elem in aligned_seq2:
             new_alignment.append(elem)
 
-        print("\n NEW ALIGNEMENTS: ", new_alignment, "\n __________________________________________________________ \n")
-
         return new_alignment
 
-
     def multiple_alignement(self):
-        """_summary_
+        """
+        Alignements multiples des séquences selon la distance trouvée avec l'arbre newick.
+        Cette fonction marche !
         """
         list_seq = []
         list_dist = []
+        list_boolean = []
         # On trie le dico avec en clé les séquences et en valeur la distance (les plus proches en premiers)
         for k, v in sorted(self.dict_tree.items(), key=lambda x: x[1]):
             del self.dict_tree[k]
@@ -277,36 +276,79 @@ class Alignement():
         for key, value in self.dict_tree.items():
             list_seq.append(key)
             list_dist.append(value)
+        for element in list_dist:
+            list_boolean.append(False)
         # On sort les séquences à merge du bon dico qui les contient :
 
         print(list_dist)
-        for i in range(len(list_dist)-1):
-            print("\n Etape 0 : ", i)
-            # Si les deux première distances (triées) sont identiques :
-            if list_dist[i] == list_dist[i+1]:
-                espece1 = self.dict_sequence_tree[list_seq[i]]
-                espece2 = self.dict_sequence_tree[list_seq[i+1]]
-                self.alignement1 = self.needleman_wunsch_profile(espece1, espece2, BLOSUM62)
-                i += 2
-                print("\n Etape 1 : ", i)
-                print(self.alignement1)
-                if list_dist[i] == list_dist[i+1]:
-                    espece3 = self.dict_sequence_tree[list_seq[i]]
-                    espece4 = self.dict_sequence_tree[list_seq[i+1]]
-                    i += 2
-                    print("\n Etape 2 : ", i)
-                    self.alignement2 = self.needleman_wunsch_profile(
-                        espece3, espece4, BLOSUM62)
-                if self.alignement2 != []:
-                    self.alignement1 = self.needleman_wunsch_profile(
-                        self.alignement1, self.alignement2, BLOSUM62)
-                    self.alignement2 = []
-            else:
-                print("\n Etape 3 : ", i)
-                espece_solo = self.dict_sequence_tree[list_seq[i]]
-                self.alignement1
+        for i in range(len(list_dist)):
+            print(list_boolean)
+            if list_boolean[i] == False:
+                print("IIIICI : ", i)
+                print("self_alignement1 : ", self.alignement1)
+                print("\n Etape 0 : ", i)
+                # Si c'est la dernière séquence, on l'ajoute à l'alignement:
+                if i == len(list_dist)-1:
+                    print("coucou")
+                    espece_solo = self.dict_sequence_tree[list_seq[i]]
+                    self.alignement1 = self.needleman_wunsch_profile(self.alignement1, espece_solo, BLOSUM62)
+                    list_boolean[i] = True
+                    print("FIN : ", self.alignement1)
+                    return self.alignement1
+                # Si les deux première distances (triées) sont identiques :
+                elif list_dist[i] == list_dist[i+1]:
+                    print("\n Etape 0 bis : ", i)
+                    if self.alignement1 == []:
+                        print("\n Etape 1 : ", i)
+                        espece1 = self.dict_sequence_tree[list_seq[i]]
+                        espece2 = self.dict_sequence_tree[list_seq[i+1]]
+                        self.alignement1 = self.needleman_wunsch_profile(espece1, espece2, BLOSUM62)
+                    else:
+                        print("\n Etape 1bis : ", i)
+                        espece1 = self.dict_sequence_tree[list_seq[i]]
+                        espece2 = self.dict_sequence_tree[list_seq[i+1]]
+                        self.alignement2 = self.needleman_wunsch_profile(espece1, espece2, BLOSUM62)
+                    list_boolean[i] = True
+                    list_boolean[i+1] = True
+                elif list_dist[i] != list_dist[i+1]:
+                    print("\n Etape 0ter : ", i)
+                    self.alignement2 = [self.dict_sequence_tree[list_seq[i]]]
+                    list_boolean[i] = True
+                if self.alignement1 != [] and self.alignement2 != []:
+                    print("\n Etape X : ", i)
+                    self.alignement1 = self.needleman_wunsch_profile(self.alignement1, self.alignement2, BLOSUM62)
+                    
+        #         i += 2
+        #         print("\n Etape 1 : ", i)
+        #         if i in range(len(list_dist)-2):
+        #             if list_dist[i] == list_dist[i+1]:
+        #                 espece3 = self.dict_sequence_tree[list_seq[i]]
+        #                 espece4 = self.dict_sequence_tree[list_seq[i+1]]
+        #                 i += 2
+        #                 print("\n Etape 2 : ", i)
+        #                 self.alignement2 = self.needleman_wunsch_profile(
+        #                     espece3, espece4, BLOSUM62)
+        #             if self.alignement2 != []:
+        #                 self.alignement1 = self.needleman_wunsch_profile(
+        #                     self.alignement1, self.alignement2, BLOSUM62)
+        #                 self.alignement2 = []
+        #     elif list_dist[i] != list_dist[i+1]:
+        #         print("\n Etape 3 : ", i)
+        #         espece_solo = self.dict_sequence_tree[list_seq[i]]
+        #         if self.alignement1 == []:
+        #             if list_dist[i+1] == list_dist[i+2]:
+        #                 espece1 = self.dict_sequence_tree[list_seq[i+1]]
+        #                 espece2 = self.dict_sequence_tree[list_seq[i+2]]
+        #                 self.alignement1 = self.needleman_wunsch_profile(espece1, espece2, BLOSUM62)
+        #                 self.alignement1 = self.needleman_wunsch_profile(self.alignement1, espece_solo, BLOSUM62)
+        #                 i += 2
+        #         else:
+        #             self.alignement1 = self.needleman_wunsch_profile(
+        #                     self.alignement1, espece_solo, BLOSUM62)
         print("apres")
         return self.alignement1
+
+
 
 
 if __name__ == "__main__":
