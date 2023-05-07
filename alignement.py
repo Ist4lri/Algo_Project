@@ -1,5 +1,5 @@
 from constants import *
-from numpy import array, delete, zeros, ones, transpose, shape
+from numpy import array, delete, zeros, ones, transpose
 from numpy import max as np_max
 from upgma import Upgma
 
@@ -16,8 +16,10 @@ class Alignement():
         self.dict_sequence_tree = {}
         self.alignement1 = []  # Premier alignement
         self.alignement2 = []  # Deuxième alignement si nécessaire
+        self.conserved_alignement = []
         self.freq_mat1 = []  # matrice de fréquences pour l'alignement1
         self.freq_mat2 = []  # matrice de fréquences pour l'alignement2
+
 
     def needleman_wunsch(self, seq1, seq2, matrix, gap=-1) -> int:
         """
@@ -276,48 +278,38 @@ class Alignement():
         for key, value in self.dict_tree.items():
             list_seq.append(key)
             list_dist.append(value)
-        for element in list_dist:
+        for _ in list_dist:
             list_boolean.append(False)
         # On sort les séquences à merge du bon dico qui les contient :
 
-        print(list_dist)
-        for i in range(len(list_dist)):
-            print(list_boolean)
+        i = 0
+        while i < len(list_dist):
             if list_boolean[i] == False:
-                print("IIIICI : ", i)
-                print("self_alignement1 : ", self.alignement1)
-                print("\n Etape 0 : ", i)
                 # Si c'est la dernière séquence, on l'ajoute à l'alignement:
                 if i == len(list_dist)-1:
-                    print("coucou")
                     espece_solo = self.dict_sequence_tree[list_seq[i]]
                     self.alignement1 = self.needleman_wunsch_profile(self.alignement1, espece_solo, BLOSUM62)
                     list_boolean[i] = True
-                    print("FIN : ", self.alignement1)
                     return self.alignement1
                 # Si les deux première distances (triées) sont identiques :
                 elif list_dist[i] == list_dist[i+1]:
-                    print("\n Etape 0 bis : ", i)
                     if self.alignement1 == []:
-                        print("\n Etape 1 : ", i)
                         espece1 = self.dict_sequence_tree[list_seq[i]]
                         espece2 = self.dict_sequence_tree[list_seq[i+1]]
                         self.alignement1 = self.needleman_wunsch_profile(espece1, espece2, BLOSUM62)
                     else:
-                        print("\n Etape 1bis : ", i)
                         espece1 = self.dict_sequence_tree[list_seq[i]]
                         espece2 = self.dict_sequence_tree[list_seq[i+1]]
                         self.alignement2 = self.needleman_wunsch_profile(espece1, espece2, BLOSUM62)
                     list_boolean[i] = True
                     list_boolean[i+1] = True
                 elif list_dist[i] != list_dist[i+1]:
-                    print("\n Etape 0ter : ", i)
                     self.alignement2 = [self.dict_sequence_tree[list_seq[i]]]
                     list_boolean[i] = True
                 if self.alignement1 != [] and self.alignement2 != []:
-                    print("\n Etape X : ", i)
                     self.alignement1 = self.needleman_wunsch_profile(self.alignement1, self.alignement2, BLOSUM62)
-                    
+            i+=1
+        return self.alignement1
         #         i += 2
         #         print("\n Etape 1 : ", i)
         #         if i in range(len(list_dist)-2):
@@ -345,8 +337,66 @@ class Alignement():
         #         else:
         #             self.alignement1 = self.needleman_wunsch_profile(
         #                     self.alignement1, espece_solo, BLOSUM62)
-        print("apres")
-        return self.alignement1
+
+    def conserved_position(self) :
+        """
+        Trouve les positions conservées dans les alignements multiples et reconstruit
+        les séquences alignées en ne gardant que ces positions:
+        Position conservée : 1 ou 2 aa (ou gap) différents maximum
+        """
+        pos_conserved = []
+        temp_list = []
+        # pour chaque position des séquences alignées
+        for i in range(len(self.alignement1[0])):
+            # pour chaque alignement on ajoute l'aa à cette position
+            for align in self.alignement1:
+                letter = align[i]
+                temp_list.append(letter)
+            # On regarde les positions conservées
+            aa1 = temp_list[0]
+            aa2 = None
+            aa3 = None
+            conserved = True
+            # pour chaque aa de la liste temp
+            for aa in temp_list :
+                # Si aa3 -> position non conservée, la boucle s'arrete
+                if aa3:
+                    conserved = False
+                # Si aa2 (déjà deux aa différents)
+                if aa2:
+                    # Si juste deux positions conservées on continue si pas de nouvel aa
+                    if aa in [aa1, aa2]:
+                        continue
+                    else:
+                        aa3 = aa
+                    # Si un seul aa pour le moment, on continue et on en ajoute un si nouveau
+                if aa2 == None:
+                    if aa == aa1:
+                        continue
+                    else:
+                        aa2 = aa
+            # Si un aa différent ou 2 : on ajoute la position conservée à la liste
+            if conserved == True:
+                pos_conserved.append(i)
+            # On vide la liste temporaire
+            temp_list = []
+
+        # On reconstruit les alignements en fonctions des positions conservées
+        for align in self.alignement1:
+            conserved_align = ""
+            for pos in pos_conserved:
+                conserved_align += align[pos]
+            self.conserved_alignement.append(conserved_align)
+       
+                
+            # comparer la position
+            # s'il y en a que deux différents, on garde
+            # Refaire les séquences avec juste les positions conservées
+
+
+
+# Matrice de distance sur la base des conditions conservées.
+# Dist entre deux seq = nombre de fois où ces seqs sont différentes.
 
 
 
