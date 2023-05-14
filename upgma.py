@@ -72,23 +72,27 @@ class Upgma() :
 
         Args:
             self.matrice_distance (matrix): matrix of the distances
+            clades_names (list) : names of the species
         
         Returns:
-            tree in newick format
+            tree in newick format, list of clades in order
         """
+        # On crée un arbre binaire
         clades = [BinaryTree([name,[],[]]) for name in clades_names]
         length = len(clades_names)
+        # On trouve les distances les plus courtes entre les séquences des espèces de la liste
         for i in range(length-1):
             self.find_closer_upgma(dist_matrix)
+            # On calcule la distance (et localisation dans la matrice) entre les deux espèces les plus proches
             clades[self.line_min].branch_length = self.mini/2 - clades[self.line_min].depth
             clades[self.col_min].branch_length = self.mini/2 - clades[self.col_min].depth
             new_clade = clades[self.line_min].join(clades[self.col_min])
             new_clade.depth = self.mini/2
+            # Tant qu'il reste des taxons
             if len(dist_matrix) > 1:
                 dist_matrix = self.update_upgma(dist_matrix)
                 clades = [new_clade] + clades[:self.line_min]+clades[self.line_min+1:self.col_min]+clades[self.col_min+1:]
         #clades = [new_clade] + clades[:self.line_min-1]+clades[self.line_min:self.col_min-1]+clades[self.col_min:]
-        print(clades[0].newick())
         return clades[0].parse_newick(clades[0].newick())
        
        

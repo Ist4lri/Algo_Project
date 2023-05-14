@@ -43,4 +43,6 @@ if __name__ == "__main__":
     model.read_file("opsines.fasta.txt", "r")
     a = model.alignement.get_all_max_score(model.dict_of_seq)
     d = model.alignement.conserved_position()
+    e, f = model.alignement.conserved_distance_matrix()
+    g = model.alignement.neighbor_joining(e, f)
     
