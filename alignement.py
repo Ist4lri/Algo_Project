@@ -432,19 +432,38 @@ class Alignement():
         # Initialisation of the matrix
         size_matrix = len(matrice_dist)
         matrice_temp = zeros((size_matrix+1,size_matrix+1))
-        # Copy the dist_matrix
+        print(matrice_temp)
+        # # Copy the dist_matrix
         matrice_temp[1:,1:] = matrice_dist
-        # For each group -> mean of the two values we merge.
-        for i in range(1, size_matrix+1) :
-            matrice_temp[i, 0] = (matrice_temp[self.line_min+1, i] +
-                                  matrice_temp[self.col_min+1,i])/2
-            matrice_temp[0, i] = matrice_temp[i, 0]
-        # Delete the line of one of the two groups we merged.
-        matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=0)
-        matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=1)
-        return matrice_temp
+        print("mat_dist :", matrice_dist)
+        # Pour chaque taxon restant, on calcul sa distance avec le noeud et on l'ajoute à une somme.
         
-    
+        for k in range(1,size_matrix) :
+            print("k: ", k, "i: ", i, "j: ", j)
+            matrice_temp[k, 0] = (matrice_dist[k, i] + matrice_dist[k, j] - matrice_dist[i, j]) / 2
+            print(matrice_dist)
+            matrice_temp[0, k] = matrice_temp[k, 0]
+            print(matrice_temp)
+        matrice_temp = delete(matrice_temp, [i+1,j+1], axis=0)
+        matrice_temp = delete(matrice_temp, [i+1,j+1], axis=1)
+        print(matrice_temp)
+
+        #Cette boucle parcourt tous les indices k de 0 à size_matrix - 1.
+        # Pour chaque valeur de k différente de i et j, la distance entre le clade k
+        # et le nœud qui relie les clades i et j est calculée et assignée à matrice_temp.
+        # Les indices utilisés pour l'assignation sont ajustés en fonction de la présence de
+        # i et j dans la matrice. L'équation utilisée pour le calcul de la distance est basée
+        # sur la formule du Neighbor Joining.
+
+        #Veuillez noter que cette partie du code semble incomplète et qu'il pourrait y avoir d'autres
+        # lignes nécessaires pour effectuer la mise à jour complète de la matrice de distance et de la liste de clades.
+
+                
+        # # Delete the line of one of the two groups we merged.
+        # matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=0)
+        # matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=1)
+        self.dist_mat_conserved = matrice_temp
+
         
     def nj_global(self):
         """_summary_
@@ -466,9 +485,11 @@ class Alignement():
             # On défini u le nouveau noeud
             node = tree_nj[i].join(tree_nj[j])
             # Calcul d'une nouvelle matrice de distance entre le noeud et tous les autres clades
-            
+            self.nj_matrix_update(self.dist_mat_conserved, i, j)
+            print(self.dist_mat_conserved)
             # mise à jour des clades
             tree_nj = [node] + tree_nj[:i]+tree_nj[i+1:j]+tree_nj[j+1:]
+        print(tree_nj[0])
             
             
 
@@ -490,6 +511,7 @@ class Alignement():
         # FAIRE L'UPDATE DU NEIGHBOR JOINING
         # METTRE EN PLACE L'UPDATE DES CLADES EN MÊME TEMPS
         # SORTIR UN ARBRE NEWICK
+        # FAIRE UN MAIN
         # FAIRE UN FICHIER D'OUTPUT
         
 
@@ -552,6 +574,10 @@ class Alignement():
         return tree
 
 
+
+
+
+
 # Matrice de distance sur la base des conditions conservées.
 # Dist entre deux seq = nombre de fois où ces seqs sont différentes.
 
@@ -573,4 +599,4 @@ if __name__ == "__main__":
 'M-SKMP----EE-------F-LFNSLV-PWDGPQYHLAPWVF-QAFMGF-VF--GT-PLNAVL-VATYRKLRQPLNYILVNVSLGFI-CFSVF---VFISC--GYFF-G-VCAEA-FLG-SAAGLVTGWSLAFLAFERYIICKPFGNFRFS-KHAIA---VTWIGIGVSI--PPFFGWSRFPEGL-QCSCGPDWYTVGTK---YSE-YYT-FLFICYIPL--LICFSY-QLL--RALRAVAAQQQESASTQKAEREVSHMVVVMVGSFCVCYPYAAAMYVNN-R-NHG--LRLVTIPAFFSKSACIYNPIIY-FMNKQFAC-IMEMVC--G-KMDESS---SSQKTEVSTVSSVGP-',
 'M-SKM-----E--------F-LFNSLV-PWDGPQYHLAPWAF-QAFMGF-VF--GT-PLNAVL-VATYRKLRQPLNYILVNVSLGFI-CFSVFI--VFISC--GYFF-G-VCAEA-FLGCTA-GLVTGWSLAFLAFERYIICKPFGNFRFS-KHAV----VTWIGIGVSI--PPFFGWSRFPEGL-QCSCGPDWYTVGTK---YSE-YYT-FLFICYIPL--LICFSY-QLL-G-ALRAVAAQQQESASTQKAEREVSHMVVVMVGSFCLCYPYAAAMYVNN-R-NHG--LRLVTIPAFFSKSACVYNPIIY-FMNKQFAC-IMEMVC--G-KMDESS---SSQKTEVSTVSSVGP-',
 '------------MDAWAVQFG--NS-V-PFEGEQYHIAPWAF-QAFMGF-VF--GT-PMNGVLFV-TYKKLRQPLNYILVNISLGFID-FSV--SQVFV-CAAGYYFLGTLCAEAA-MG-SA-GLVTGWSLAVLAFERYVICKPFGSFKFQGQ-AV-GAVVTWI-IGTACATPPFFGWSRYPEGLGT-ACGPDWYT---KSEEYSESY-T-FLLICFMPM-III-FSY-QLL-G-ALRAVAAQQAESESTQKAEREVSRMVVVMVGSFVLCYPYAVAMYANSDEPNK--Y-RLVAIPAFFSKSSCVYNPLIY-FMNKQFAC-IMETV--FGKKIDESS-EVSS-KTE--T-SSV--A']
-    print(align.count_differences_in_seq(seq1, seq2))
+    #print(align.count_differences_in_seq(seq1, seq2))

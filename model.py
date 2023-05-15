@@ -40,9 +40,9 @@ class Model():
 if __name__ == "__main__":
     model = Model()
     # On lance les fonctions dans l'ordre nécessaire !!!
-    model.read_file("opsines.fasta.txt", "r")
+    model.read_file("opsines_juste4.fasta.txt", "r")
     a = model.alignement.get_all_max_score(model.dict_of_seq)
     d = model.alignement.conserved_position()
-    e, f = model.alignement.conserved_distance_matrix()
-    g = model.alignement.neighbor_joining(e, f)
+    model.alignement.conserved_distance_matrix()
+    model.alignement.nj_global()
     
