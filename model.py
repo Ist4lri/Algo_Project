@@ -1,6 +1,19 @@
 from arbre import *
 from constants import *
 from alignement import *
+import argparse
+from os import path
+from sys import exit as sys_exit
+
+
+def is_fasta(fastafile) : # takes in argument the name of the file
+    """This function control if the file starts with a '>' used in fasta files headers."""
+    if fastafile.split(".")[-1] in ["fasta","faa","fa"] : # extension is OK
+        with open(fastafile, "r", encoding='UTF-8') as file :
+            first_line = file.read(1) # take the first line of the file
+            if first_line.split()[0] == ">" : # first char of first line
+                return True # this looks like a fasta file
+    return False
 
 
 class Model():
@@ -37,12 +50,24 @@ class Model():
         self.alignement.dict_sequence_tree = self.dict_of_seq
 
 
+
+
+
+
 if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser(description="Align and tree")
+    parser.add_argument('file_name', metavar='file_name', type=str,
+                    help='name of the fastafile')
+    parser.add_argument('--output', metavar='output', type=str,
+                    help='name of the output file', default='output.txt')
+    args =  parser.parse_args()
+    
     
     model = Model()
     
     # On lance les fonctions dans l'ordre nécessaire !!!
-    model.read_file("opsines.fasta.txt", "r")
+    model.read_file(args.file_name, "r")
     a = model.alignement.get_all_max_score(model.dict_of_seq)
     d = model.alignement.conserved_position()
     model.alignement.conserved_distance_matrix()
@@ -50,7 +75,7 @@ if __name__ == "__main__":
 
     # Ecriture du fichier d'output    
     
-    with open("Output_project_algo.txt", "w") as file:
+    with open(args.output, "w") as file:
         
         # Mise en forme des résultats
         
@@ -91,17 +116,3 @@ if __name__ == "__main__":
         file.write(str(model.alignement.output_newick_final))
         file.write("\n\n\n")
             
-            
-        
-    # à mettre dans le ficheir d'output:
-    # - score matrix (avec blossum 62) -> premier needlman wunch !
-    # - arbre guide en format newick (après upgma)
-    # - mettre l'alignement multiple (12 séquences)
-    # - matrice des positions conservées
-    # - format newick final
-    # self.output_score_mat = None
-    # self.output_newick_upgma = None
-    # self.output_multiple_align = None
-    # self.output_conserved_pos_mat = None
-    # self.output_newick_final = None
-    
