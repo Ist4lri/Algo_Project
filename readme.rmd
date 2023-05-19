@@ -1,0 +1,5 @@
+# PROJET D'ALGO M1 DLAD
+
+Pour executer ce programme, il faut lancer le script *model.py*.
+
+Les résultats sont affichés dans le fichier **Output_project_algo.txt**.

@@ -38,11 +38,70 @@ class Model():
 
 
 if __name__ == "__main__":
+    
     model = Model()
+    
     # On lance les fonctions dans l'ordre nécessaire !!!
-    model.read_file("opsines_juste4.fasta.txt", "r")
+    model.read_file("opsines.fasta.txt", "r")
     a = model.alignement.get_all_max_score(model.dict_of_seq)
     d = model.alignement.conserved_position()
     model.alignement.conserved_distance_matrix()
     model.alignement.nj_global()
+
+    # Ecriture du fichier d'output    
+    
+    with open("Output_project_algo.txt", "w") as file:
+        
+        # Mise en forme des résultats
+        
+        # Pour la matrice des scores :
+        file.write("Matrice des scores : \n\n")
+        for line in model.alignement.output_score_mat:
+            file.write("[")
+            for element in line:
+                file.write(str(element))
+                file.write("\t")
+            file.write("]\n")
+        file.write("\n\n\n")
+        
+        # Arbre guide newick :
+        file.write("Arbre guide au format newick : \n\n")
+        file.write(str(model.alignement.output_newick_upgma))
+        file.write("\n\n\n")
+        
+        # Alignement multiple :
+        file.write("\nAlignement multiple : \n\n")
+        for i in range(len(model.alignement.output_clades_names_for_align)):
+            file.write(str(model.alignement.output_clades_names_for_align[i])+
+                       " : \t"+str(model.alignement.output_multiple_align[i])+"\n")
+        file.write("\n\n")
+        
+        # Matrice positions conservées :
+        file.write("\nMatrice des positions conservées : \n\n")
+        for line in model.alignement.output_conserved_pos_mat:
+            file.write("[")
+            for element in line:
+                file.write(str(element))
+                file.write("\t")
+            file.write("]\n")
+        file.write("\n\n\n")
+        
+        # Final newick :
+        file.write("Arbre newick arpès NJ: \n\n")
+        file.write(str(model.alignement.output_newick_final))
+        file.write("\n\n\n")
+            
+            
+        
+    # à mettre dans le ficheir d'output:
+    # - score matrix (avec blossum 62) -> premier needlman wunch !
+    # - arbre guide en format newick (après upgma)
+    # - mettre l'alignement multiple (12 séquences)
+    # - matrice des positions conservées
+    # - format newick final
+    # self.output_score_mat = None
+    # self.output_newick_upgma = None
+    # self.output_multiple_align = None
+    # self.output_conserved_pos_mat = None
+    # self.output_newick_final = None
     

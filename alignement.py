@@ -24,6 +24,13 @@ class Alignement():
         self.dist_mat_conserved= [] # matrice des distances entre les sequences conservées
         self.freq_mat1 = []  # matrice de fréquences pour l'alignement1
         self.freq_mat2 = []  # matrice de fréquences pour l'alignement2
+        
+        self.output_score_mat = None
+        self.output_newick_upgma = None
+        self.output_clades_names_for_align = None
+        self.output_multiple_align = None
+        self.output_conserved_pos_mat = None
+        self.output_newick_final = None
 
 
     def needleman_wunsch(self, seq1, seq2, matrix, gap=-1) -> int:
@@ -60,6 +67,7 @@ class Alignement():
                     score_matrix[i][j-1] + gap  # Trou dans seq2
                 )
         return score_matrix[n][m]
+
 
     def get_all_max_score(self, fasta_dict):
         """get the max score of all sequence
@@ -101,13 +109,17 @@ class Alignement():
                     self.matrice_distance[line, col] = - \
                         self.matrice_distance[line, col]
         #self.matrice_distance = self.upgma.transform_mat_dist(self.matrice_distance)
+        self.output_score_mat = self.matrice_distance
         # To UPGMA :
         self.upgma_to_multiple_align(self.matrice_distance, self.clades_names)
 
+
     def upgma_to_multiple_align(self, distance_matrix, clades_names):
-        self.dict_tree = self.upgma.tree_with_upgma(
+        self.dict_tree, tree_output = self.upgma.tree_with_upgma(
             distance_matrix, clades_names)
+        self.output_newick_upgma = tree_output
         self.multiple_alignement()
+
 
     def freq_matrix_calc(self, seq_list):
         """Cette fonction prend une liste de séquences d'acides aminés et retourne une matrice de fréquence"""
@@ -134,6 +146,7 @@ class Alignement():
         #         freq_matrix[i][indice_aa_dans_matrice] += 1
         # freq_matrix /= num_seq
         return freq_matrix
+
 
     def needleman_wunsch_profile(self, seq1 : list, seq2 : list, matrix : list):
         """Cette fonction prend en entrée deux profils
@@ -267,6 +280,7 @@ class Alignement():
 
         return new_alignment
 
+
     def multiple_alignement(self):
         """
         Alignements multiples des séquences selon la distance trouvée avec l'arbre newick.
@@ -285,6 +299,7 @@ class Alignement():
             list_dist.append(value)
         # On change clades_names --> il est maintenant trié dans l'ordre croissant des distances
         self.clades_names = list_seq
+        self.output_clades_names_for_align = self.clades_names
         for _ in list_dist:
             list_boolean.append(False)
         # On sort les séquences à merge du bon dico qui les contient :
@@ -318,12 +333,14 @@ class Alignement():
             i+=1
         return self.alignement1
 
+
     def conserved_position(self) :
         """
         Trouve les positions conservées dans les alignements multiples et reconstruit
         les séquences alignées en ne gardant que ces positions:
         Position conservée : 1 ou 2 aa (ou gap) différents maximum
         """
+        self.output_multiple_align = self.alignement1
         pos_conserved = []
         temp_list = []
         # pour chaque position des séquences alignées
@@ -367,10 +384,6 @@ class Alignement():
             # On extrait les mêmes alignements mais avec seulement les positions conservées (clades_names est tjr dans l'ordre)
             self.conserved_alignement.append(conserved_align)
        
-                
-            # comparer la position
-            # s'il y en a que deux différents, on garde
-            # Refaire les séquences avec juste les positions conservées
 
     def conserved_distance_matrix(self):
         """Created a matrix distance from the conserved sequences after multiple alignement.
@@ -398,6 +411,8 @@ class Alignement():
         # To delete the first line of zeros :
         conserved_dist_mat = delete(conserved_dist_mat, 0, axis=0)
         self.dist_mat_conserved = conserved_dist_mat
+        self.output_conserved_pos_mat = self.dist_mat_conserved
+
         
     def count_differences_in_seq(self, seq1, seq2):
         """Compte les différences entre deux séquences"""
@@ -424,6 +439,24 @@ class Alignement():
         return Q, total_dist
     
     
+    def nj_find_mini(self):
+        """_summary_
+
+        Args:
+            matrice_dist (_type_): _description_
+        """
+        # on définit un minimum par défaut
+        n = len(self.dist_mat_conserved)
+        mindist = self.dist_mat_conserved[0,1]
+        min_i, min_j = 0, 1
+        # On parcours la matrice (seulement la moitié car symétrique)
+        for i in range(n-1): # lignes
+            for j in range(i+1, n):# colonnes
+                if self.dist_mat_conserved[i, j] < mindist:
+                    mindist, min_i, min_j = self.dist_mat_conserved[i, j], i, j
+        return min_i, min_j
+    
+
     def nj_matrix_update(self, matrice_dist, i, j):
         """On update de la matrice de distance. Calcul des distances entre le noeud qui relie
         les taxons i et j et tous les autres clades.
@@ -432,36 +465,14 @@ class Alignement():
         # Initialisation of the matrix
         size_matrix = len(matrice_dist)
         matrice_temp = zeros((size_matrix+1,size_matrix+1))
-        print(matrice_temp)
         # # Copy the dist_matrix
         matrice_temp[1:,1:] = matrice_dist
-        print("mat_dist :", matrice_dist)
         # Pour chaque taxon restant, on calcul sa distance avec le noeud et on l'ajoute à une somme.
-        
-        for k in range(1,size_matrix) :
-            print("k: ", k, "i: ", i, "j: ", j)
-            matrice_temp[k, 0] = (matrice_dist[k, i] + matrice_dist[k, j] - matrice_dist[i, j]) / 2
-            print(matrice_dist)
+        for k in range(1,size_matrix+1) :
+            matrice_temp[k, 0] = (matrice_dist[k-1, i] + matrice_dist[k-1, j] - matrice_dist[i, j]) / 2
             matrice_temp[0, k] = matrice_temp[k, 0]
-            print(matrice_temp)
         matrice_temp = delete(matrice_temp, [i+1,j+1], axis=0)
         matrice_temp = delete(matrice_temp, [i+1,j+1], axis=1)
-        print(matrice_temp)
-
-        #Cette boucle parcourt tous les indices k de 0 à size_matrix - 1.
-        # Pour chaque valeur de k différente de i et j, la distance entre le clade k
-        # et le nœud qui relie les clades i et j est calculée et assignée à matrice_temp.
-        # Les indices utilisés pour l'assignation sont ajustés en fonction de la présence de
-        # i et j dans la matrice. L'équation utilisée pour le calcul de la distance est basée
-        # sur la formule du Neighbor Joining.
-
-        #Veuillez noter que cette partie du code semble incomplète et qu'il pourrait y avoir d'autres
-        # lignes nécessaires pour effectuer la mise à jour complète de la matrice de distance et de la liste de clades.
-
-                
-        # # Delete the line of one of the two groups we merged.
-        # matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=0)
-        # matrice_temp = delete(matrice_temp,[self.line_min+1, self.col_min+1],axis=1)
         self.dist_mat_conserved = matrice_temp
 
         
@@ -475,112 +486,24 @@ class Alignement():
             # Création de la matrice Q et récupérartion des distances totales pour chaque clades
             matQ, total_dist = self.nj_matQ_creation()
             # Trouver les indices (i, j) correspondant à la plus petite valeur de Q
-            min_indices = unravel_index(argmin(matQ), matQ.shape)
-            i, j = min_indices
+            i, j = self.nj_find_mini()
             # On ne fait plus l'hypothèse de l'horloge moléculaire par rapport à upgma.
             # Donc on calcul les distance de nos deux clades les plus proches par rapport au noeud qui les relie.
-            delta = (total_dist[i] - total_dist[j]) / (n - 2)
-            limb_length_i = (self.dist_mat_conserved[i, j] + delta) / 2
-            limb_length_j = self.dist_mat_conserved[i, j] - limb_length_i
-            # On défini u le nouveau noeud
-            node = tree_nj[i].join(tree_nj[j])
-            # Calcul d'une nouvelle matrice de distance entre le noeud et tous les autres clades
-            self.nj_matrix_update(self.dist_mat_conserved, i, j)
-            print(self.dist_mat_conserved)
-            # mise à jour des clades
-            tree_nj = [node] + tree_nj[:i]+tree_nj[i+1:j]+tree_nj[j+1:]
-        print(tree_nj[0])
-            
-            
-
-        # ÇA ÇA VIENT DU SCRIPT UPGMA
-        #     self.find_closer_upgma(dist_matrix)
-        #     # On calcule la distance (et ocalisation dans la matrice) entre les deux espèces les plus proches
-        #     clades[self.line_min].branch_length = self.mini/2 - clades[self.line_min].depth
-        #     clades[self.col_min].branch_length = self.mini/2 - clades[self.col_min].depth
-        #     new_clade = clades[self.line_min].join(clades[self.col_min])
-        #     new_clade.depth = self.mini/2
-        #     # Tant qu'il reste des taxons
-        #     if len(dist_matrix) > 1:
-        #         dist_matrix = self.update_upgma(dist_matrix)
-        #         clades = [new_clade] + clades[:self.line_min]+clades[self.line_min+1:self.col_min]+clades[self.col_min+1:]
-        # #clades = [new_clade] + clades[:self.line_min-1]+clades[self.line_min:self.col_min-1]+clades[self.col_min:]
-        # return clades[0].parse_newick(clades[0].newick())
-        
-        # TODO
-        # FAIRE L'UPDATE DU NEIGHBOR JOINING
-        # METTRE EN PLACE L'UPDATE DES CLADES EN MÊME TEMPS
-        # SORTIR UN ARBRE NEWICK
-        # FAIRE UN MAIN
-        # FAIRE UN FICHIER D'OUTPUT
-        
-
-
-
-    def neighbor_joining(self, dist_matrix, clades):
-        """_summary_
-
-        Args:
-            dist_matrix (_type_): _description_
-            clades (_type_): _description_
-
-        Returns:
-            _type_: _description_
-        """
-        n = len(dist_matrix)
-        if n == 2:
-            # Crée un arbre avec une seule branche reliant les deux clades
-            tree = {'left': clades[0], 'right': clades[1], 'length': dist_matrix[0, 1]}
-            return tree
-        
-        # Calcul des sommes de distances pour chaque clade
-        total_dist = np_sum(dist_matrix, axis=1)
-        
-        # Calcul de la matrice Q
-        Q = zeros((n, n))
-        for i in range(n):
-            for j in range(i+1, n):
-                Q[i, j] = (n - 2) * dist_matrix[i, j] - total_dist[i] - total_dist[j]
-                Q[j, i] = Q[i, j]
-        
-        # Trouver les indices (i, j) correspondant à la plus petite valeur de Q
-        min_indices = unravel_index(argmin(Q), Q.shape)
-        i, j = min_indices
-        
-        # Calcul des distances entre les nouveaux clades
-        delta = (total_dist[i] - total_dist[j]) / (n - 2)
-        limb_length_i = (dist_matrix[i, j] + delta) / 2
-        limb_length_j = (dist_matrix[i, j] - delta) / 2
-        
-        # Mise à jour de la matrice de distance avec les nouveaux clades
-        new_dist_matrix = zeros((n-1, n-1))
-        new_dist_matrix[:-1, :-1] = (dist_matrix[:-1, :-1] * (n - 2) - dist_matrix[i, :-1] - dist_matrix[j, :-1]) / (n - 2)
-        new_dist_matrix[-1, :-1] = (dist_matrix[i, :-1] + dist_matrix[j, :-1] - dist_matrix[i, j]) / 2
-        new_dist_matrix[:-1, -1] = new_dist_matrix[-1, :-1]
-        
-        # Suppression des lignes et colonnes correspondant aux anciens clades
-        new_dist_matrix = delete(new_dist_matrix, (i, j), axis=0)
-        new_dist_matrix = delete(new_dist_matrix, (i, j), axis=1)
-        
-        # Récursion pour construire l'arbre avec les nouveaux clades
-        subtree_i = self.neighbor_joining(new_dist_matrix, clades[:i] + clades[i+1:j] + clades[j+1:])
-        subtree_j = self.neighbor_joining(new_dist_matrix, clades[:i] + clades[i+1:j] + clades[j+1:])
-        
-        # Crée un nouvel arbre en reliant les sous-arbres aux nouveaux clades
-        tree = {'left': subtree_i, 'right': subtree_j}
-        tree['left']['length'] = limb_length_i
-        tree['right']['length'] = limb_length_j
-        print(tree)
-        return tree
-
-
-
-
-
-
-# Matrice de distance sur la base des conditions conservées.
-# Dist entre deux seq = nombre de fois où ces seqs sont différentes.
-
+            delta = (total_dist[i] - total_dist[j]) / ((n - 2)*2)
+            node_length_i = (self.dist_mat_conserved[i, j]/2) + delta
+            node_length_j = self.dist_mat_conserved[i, j] - node_length_i
+            # update de l'arbre
+            tree_nj[i].branch_length = node_length_i #- tree_nj[i].depth
+            tree_nj[j].branch_length = node_length_j #- tree_nj[j].depth
+            new_tree_nj = tree_nj[i].join(tree_nj[j])
+            new_tree_nj.depth = node_length_i + node_length_j
+            # Update pour tous les taxons
+            if len(self.dist_mat_conserved) > 1:
+                self.nj_matrix_update(self.dist_mat_conserved, i, j)
+                tree_nj = [new_tree_nj] + tree_nj[:i] + tree_nj[i+1:j] + tree_nj[j+1:]
+        self.output_newick_final = tree_nj[0].newick()
+        return tree_nj[0].newick()
+  
 
 
 

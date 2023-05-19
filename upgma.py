@@ -93,7 +93,7 @@ class Upgma() :
                 dist_matrix = self.update_upgma(dist_matrix)
                 clades = [new_clade] + clades[:self.line_min]+clades[self.line_min+1:self.col_min]+clades[self.col_min+1:]
         #clades = [new_clade] + clades[:self.line_min-1]+clades[self.line_min:self.col_min-1]+clades[self.col_min:]
-        return clades[0].parse_newick(clades[0].newick())
+        return clades[0].parse_newick(clades[0].newick()), clades[0].newick()
        
        
 # def wpgma(distance,names):
