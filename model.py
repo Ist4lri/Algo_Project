@@ -2,17 +2,16 @@ from arbre import *
 from constants import *
 from alignement import *
 import argparse
-from os import path
-from sys import exit as sys_exit
+from Save_to_output import writing_output_file
 
 
-def is_fasta(fastafile) : # takes in argument the name of the file
+def is_fasta(fastafile):  # takes in argument the name of the file
     """This function control if the file starts with a '>' used in fasta files headers."""
-    if fastafile.split(".")[-1] in ["fasta","faa","fa"] : # extension is OK
-        with open(fastafile, "r", encoding='UTF-8') as file :
-            first_line = file.read(1) # take the first line of the file
-            if first_line.split()[0] == ">" : # first char of first line
-                return True # this looks like a fasta file
+    if fastafile.split(".")[-1] in ["fasta", "faa", "fa"]:  # extension is OK
+        with open(fastafile, "r", encoding='UTF-8') as file:
+            first_line = file.read(1)  # take the first line of the file
+            if first_line.split()[0] == ">":  # first char of first line
+                return True  # this looks like a fasta file
     return False
 
 
@@ -49,70 +48,40 @@ class Model():
                     self.dict_of_seq[temp_header] += line.strip()
         self.alignement.dict_sequence_tree = self.dict_of_seq
 
+    def app_guidelines(self):
+        """Launching all the Script, in right order"""
+        self.alignement.get_all_max_score(self.dict_of_seq)
+        self.alignement.conserved_position()
+        self.alignement.conserved_distance_matrix()
+        self.alignement.nj_global()
 
+    def show_matrixes(self):
+        """Return all Matrix"""
+        return self.alignement.output_score_mat, self.alignement.output_conserved_pos_mat
 
+    def show_trees(self):
+        """Return all Trees"""
+        return self.alignement.output_newick_upgma, self.alignement.output_newick_final
 
+    def show_alignements(self):
+        """Return all Alignements"""
+        return self.alignement.output_clades_names_for_align, self.alignement.output_multiple_align
 
 
 if __name__ == "__main__":
-    
-    parser = argparse.ArgumentParser(description="Align and tree")
-    parser.add_argument('file_name', metavar='file_name', type=str,
-                    help='name of the fastafile')
-    parser.add_argument('--output', metavar='output', type=str,
-                    help='name of the output file', default='output.txt')
-    args =  parser.parse_args()
-    
-    
+    parser = argparse.ArgumentParser(
+        description="Here's a program for making multiple alignments, calculating scores, and building trees based on these scores.")
+    parser.add_argument('-f', '--file_name', metavar='Path of Fasta File', type=str,
+                        help='name of the fastafile')
+    parser.add_argument('-o', '--output', metavar='Output file path', type=str,
+                        help='name of the output file', default='output.txt', required=False)
+    args = parser.parse_args()
+
     model = Model()
-    
+
     # On lance les fonctions dans l'ordre nécessaire !!!
     model.read_file(args.file_name, "r")
-    a = model.alignement.get_all_max_score(model.dict_of_seq)
-    d = model.alignement.conserved_position()
-    model.alignement.conserved_distance_matrix()
-    model.alignement.nj_global()
+    model.app_guidelines()
 
-    # Ecriture du fichier d'output    
-    
-    with open(args.output, "w") as file:
-        
-        # Mise en forme des résultats
-        
-        # Pour la matrice des scores :
-        file.write("Matrice des scores : \n\n")
-        for line in model.alignement.output_score_mat:
-            file.write("[")
-            for element in line:
-                file.write(str(element))
-                file.write("\t")
-            file.write("]\n")
-        file.write("\n\n\n")
-        
-        # Arbre guide newick :
-        file.write("Arbre guide au format newick : \n\n")
-        file.write(str(model.alignement.output_newick_upgma))
-        file.write("\n\n\n")
-        
-        # Alignement multiple :
-        file.write("\nAlignement multiple : \n\n")
-        for i in range(len(model.alignement.output_clades_names_for_align)):
-            file.write(str(model.alignement.output_clades_names_for_align[i])+
-                       " : \t"+str(model.alignement.output_multiple_align[i])+"\n")
-        file.write("\n\n")
-        
-        # Matrice positions conservées :
-        file.write("\nMatrice des positions conservées : \n\n")
-        for line in model.alignement.output_conserved_pos_mat:
-            file.write("[")
-            for element in line:
-                file.write(str(element))
-                file.write("\t")
-            file.write("]\n")
-        file.write("\n\n\n")
-        
-        # Final newick :
-        file.write("Arbre newick arpès NJ: \n\n")
-        file.write(str(model.alignement.output_newick_final))
-        file.write("\n\n\n")
-            
+    # Ecriture du fichier d'output
+    writing_output_file(args.output, model)

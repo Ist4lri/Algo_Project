@@ -4,10 +4,36 @@
 ### GOUTTEBEL Pierre-LoÏc  
 ### STOSSKOPF Thomas  
 
-Pour executer ce programme, il faut lancer le script *model.py* avec la commande :  
+Warning : Your fasta file MUST respect the following format :
 
-*python3 model.py Name_file.fasta (--output_file_name)*  
-(le fichier de sortie par défaut aura le nom *output.txt*)  
+>NAME_OF_SPECIES1, WITH SOME METADATA
 
-Exemple : **python3 model.py opsines.fasta.txt**  
-Exemple : **python3 model.py opsines.fasta.txt --output test_file.txt**
+>ATGCTAGCTAGCTAC.....
+
+>NAME_OF_SPECIES2, WITH SOME METADATA
+
+>GATCCGATCGATCGAT....
+
+
+If you want to launch the app, please do this :
+
+**python3 main.py**
+
+If you want to launch with command line, please do this :
+
+**python3 model.py File_Name.fasta -o output_file_name**
+
+Output of the **python3 model.py -h** command :
+
+```
+usage: model.py [-h] [-f Path of Fasta File] [-o Output file path]
+
+Here's a program for making multiple alignments, calculating scores, and building trees based on these scores.
+
+options:
+  -h, --help            show this help message and exit
+  -f Path of Fasta File, --file_name Path of Fasta File
+                        name of the fastafile
+  -o Output file path, --output Output file path
+                        name of the output file
+```
