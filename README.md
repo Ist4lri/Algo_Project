@@ -4,15 +4,7 @@
 ### GOUTTEBEL Pierre-LoÏc  
 ### STOSSKOPF Thomas  
 
-Warning : Your fasta file MUST respect the following format :
-
->NAME_OF_SPECIES1, WITH SOME METADATA
-
->ATGCTAGCTAGCTAC.....
-
->NAME_OF_SPECIES2, WITH SOME METADATA
-
->GATCCGATCGATCGAT....
+Warning : Your fasta file MUST respect the fasta format (not just fasta extension)
 
 
 If you want to launch the app, please do this :
