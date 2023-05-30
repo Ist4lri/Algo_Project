@@ -13,7 +13,7 @@ If you want to launch the app, please do this :
 
 If you want to launch with command line, please do this :
 
-**python3 model.py File_Name.fasta -o output_file_name**
+**python3 model.py -f file_name.fasta -o output_file_name.txt**
 
 Output of the **python3 model.py -h** command :
 
